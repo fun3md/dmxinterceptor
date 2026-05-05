@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DMX Interceptor</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-card: #1a2233;
+            --bg-card-hover: #1f2a3d;
+            --border: #2a3548;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.3);
+            --green: #22c55e;
+            --red: #ef4444;
+            --yellow: #eab308;
+            --orange: #f97316;
+            --purple: #a855f7;
+            --radius: 10px;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        /* --- Header --- */
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-title { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; }
+        .header-status { display: flex; gap: 16px; align-items: center; font-size: 13px; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .status-dot.active { background: var(--green); box-shadow: 0 0 6px var(--green); }
+        .status-dot.inactive { background: var(--red); }
+
+        /* --- Navigation --- */
+        .nav {
+            display: flex; gap: 4px; padding: 8px 24px; background: var(--bg-secondary); border-bottom: 1px solid var(--border); overflow-x: auto;
+        }
+        .nav-btn {
+            padding: 8px 16px; background: transparent; border: none; color: var(--text-secondary); font-size: 13px; font-weight: 500; cursor: pointer; border-radius: 6px; white-space: nowrap; transition: 0.2s;
+        }
+        .nav-btn:hover { background: var(--bg-card); color: var(--text-primary); }
+        .nav-btn.active { background: var(--accent); color: white; }
+
+        /* --- Content --- */
+        .content { padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* --- Cards & General --- */
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; }
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; }
+        .card-label { font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+        .card-value { font-size: 28px; font-weight: 700; }
+        .card-sub { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+        
+        h3 { font-size: 16px; margin-bottom: 12px; }
+
+        /* --- Forms & Buttons --- */
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase; }
+        .form-group input, .form-group select { width: 100%; padding: 8px 12px; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary); outline: none; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        
+        .btn { padding: 8px 16px; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-danger { background: var(--red); color: white; }
+        .btn-secondary { background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border); }
+        .btn-secondary:hover { border-color: var(--accent); }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+        th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--border); }
+        th { color: var(--text-secondary); font-weight: 600; text-transform: uppercase; font-size: 11px; }
+
+        /* --- Visualizers --- */
+        .dmx-bars { display: flex; gap: 1px; height: 80px; align-items: flex-end; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 8px; margin-bottom: 20px;}
+        .dmx-bar { flex: 1; min-width: 1px; background: var(--accent); border-radius: 1px 1px 0 0; opacity: 0.8; transition: 0.1s; }
+        
+        /* --- Modal/Learn Mode --- */
+        .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .modal { background: var(--bg-card); padding: 24px; border-radius: var(--radius); border: 1px solid var(--border); width: 400px; max-width: 90%; }
+        .modal h2 { margin-bottom: 16px; }
+        .modal p { color: var(--text-secondary); margin-bottom: 20px; font-size: 14px;}
+
+        .toast { position: fixed; bottom: 20px; right: 20px; padding: 12px 20px; border-radius: 8px; font-size: 13px; color: white; opacity: 0; transition: 0.3s; pointer-events: none;}
+        .toast.show { opacity: 1; transform: translateY(-10px); }
+        .toast.success { background: var(--green); }
+        .toast.error { background: var(--red); }
+        .toast.info { background: var(--accent); }
+
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-title"><span class="icon">⚡</span> DMX Interceptor</div>
+    <div class="header-status">
+        <span><span class="status-dot" id="dot-dmx"></span>DMX</span>
+        <span><span class="status-dot" id="dot-sacn"></span>sACN</span>
+    </div>
+</div>
+
+<div class="nav">
+    <button class="nav-btn active" data-page="dashboard">Dashboard</button>
+    <button class="nav-btn" data-page="fixtures">Fixtures & Learn</button>
+    <button class="nav-btn" data-page="macros">FX Macros</button>
+    <button class="nav-btn" data-page="settings">Settings</button>
+</div>
+
+<div class="content">
+
+    <!-- Dashboard -->
+    <div id="page-dashboard" class="page active">
+        <div class="card-grid">
+            <div class="card"><div class="card-label">DMX Input</div><div class="card-value" id="val-rx">-- fps</div></div>
+            <div class="card"><div class="card-label">DMX Output</div><div class="card-value" id="val-tx">-- fps</div></div>
+            <div class="card"><div class="card-label">sACN Status</div><div class="card-value" id="val-sacn">--</div></div>
+        </div>
+        <h3>Input Channels 1-128</h3>
+        <div class="dmx-bars" id="bars-in"></div>
+        <h3>Output Channels 1-128</h3>
+        <div class="dmx-bars" id="bars-out"></div>
+    </div>
+
+    <!-- Fixtures -->
+    <div id="page-fixtures" class="page">
+        <div style="display:flex; justify-content: space-between; margin-bottom: 20px;">
+            <h3>Fixture Profiles</h3>
+            <button class="btn btn-primary" onclick="startLearnMode()">+ Learn New Fixture</button>
+        </div>
+        <div class="card">
+            <table>
+                <thead><tr><th>ID</th><th>Name</th><th>Start</th><th>Ch Count</th><th>Group</th><th>Actions</th></tr></thead>
+                <tbody id="fixture-list"></tbody>
+            </table>
+        </div>
+        <h3 style="margin-top: 20px;">Groups</h3>
+        <div class="card">
+            <table>
+                <thead><tr><th>ID</th><th>Name</th><th>Actions</th></tr></thead>
+                <tbody id="group-list"></tbody>
+            </table>
+            <div style="margin-top: 10px; display:flex; gap: 10px;">
+                <input type="text" id="new-group-name" placeholder="New Group Name" style="padding: 8px; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-primary); color: white;">
+                <button class="btn btn-secondary" onclick="addGroup()">Add Group</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Macros -->
+    <div id="page-macros" class="page">
+        <div style="display:flex; justify-content: space-between; margin-bottom: 20px;">
+            <h3>FX Macros</h3>
+            <button class="btn btn-primary" onclick="showMacroModal()">+ Add Macro</button>
+        </div>
+        <div class="card">
+            <table>
+                <thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Group/Trigger</th><th>Actions</th></tr></thead>
+                <tbody id="macro-list"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Settings -->
+    <div id="page-settings" class="page">
+        <div class="card" style="max-width:500px">
+            <h3>sACN / DMX Merge</h3>
+            <div class="form-row">
+                <div class="form-group"><label>Data Universe</label><input type="number" id="cfg-sacn-data"></div>
+                <div class="form-group"><label>Trigger Universe</label><input type="number" id="cfg-sacn-trig"></div>
+            </div>
+            <div class="form-group"><label>Merge Mode</label>
+                <select id="cfg-merge"><option value="0">HTP</option><option value="1">LTP</option></select>
+            </div>
+            <h3 style="margin-top:20px;">Smoke Machine</h3>
+            <div class="form-row">
+                <div class="form-group"><label>DMX Ch</label><input type="number" id="cfg-smoke-ch"></div>
+                <div class="form-group"><label>Burst (ms)</label><input type="number" id="cfg-smoke-burst"></div>
+            </div>
+            <button class="btn btn-primary" onclick="saveConfig()">Save Settings</button>
+        </div>
+    </div>
+</div>
+
+<!-- Learn Modal -->
+<div class="modal-overlay" id="learn-modal">
+    <div class="modal">
+        <h2 id="lm-title">Fixture Learn Mode</h2>
+        <p id="lm-text">Output is blacked out. Ready to scan channels.</p>
+        <div id="lm-actions" style="display:flex; gap: 10px; justify-content: flex-end;">
+            <button class="btn btn-secondary" onclick="cancelLearn()">Cancel</button>
+            <button class="btn btn-primary" id="lm-btn-main" onclick="learnNext()">Start Scan</button>
+        </div>
+        
+        <!-- Save Form inside Learn Modal -->
+        <div id="lm-save-form" style="display:none; margin-top:15px;">
+            <div class="form-group"><label>Name</label><input type="text" id="lf-name" value="New Fixture"></div>
+            <div class="form-group"><label>Group ID (0=None)</label><input type="number" id="lf-group" value="0"></div>
+            <div class="form-row">
+                <div class="form-group"><label>Total Channels</label><input type="number" id="lf-count" value="4"></div>
+                <div class="form-group"><label>Dimmer Offset</label><input type="number" id="lf-dim" value="0"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Red Offset</label><input type="number" id="lf-r" value="1"></div>
+                <div class="form-group"><label>Green Offset</label><input type="number" id="lf-g" value="2"></div>
+                <div class="form-group"><label>Blue Offset</label><input type="number" id="lf-b" value="3"></div>
+            </div>
+            <button class="btn btn-primary" style="width:100%" onclick="learnSave()">Save Profile</button>
+        </div>
+    </div>
+</div>
+
+<!-- Macro Modal -->
+<div class="modal-overlay" id="macro-modal">
+    <div class="modal">
+        <h2>FX Macro Config</h2>
+        <div class="form-group"><label>Name</label><input type="text" id="mac-name"></div>
+        <div class="form-row">
+            <div class="form-group"><label>Type</label>
+                <select id="mac-type">
+                    <option value="1">Blackout</option>
+                    <option value="2">Blind</option>
+                    <option value="3">Strobe</option>
+                    <option value="4">Random Strobe</option>
+                    <option value="5">Color</option>
+                    <option value="6">Smoke</option>
+                    <option value="7">Chase</option>
+                    <option value="8">Pulse</option>
+                </select>
+            </div>
+            <div class="form-group"><label>Target Group ID</label><input type="number" id="mac-group" value="0"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label>sACN Trigger Ch</label><input type="number" id="mac-trig" value="1"></div>
+            <div class="form-group"><label>Speed (ms)</label><input type="number" id="mac-speed" value="100"></div>
+        </div>
+        <div style="display:flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+            <button class="btn btn-secondary" onclick="document.getElementById('macro-modal').style.display='none'">Cancel</button>
+            <button class="btn btn-primary" onclick="saveMacro()">Save Macro</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// UI Nav
+document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById('page-' + btn.dataset.page).classList.add('active');
+        if (btn.dataset.page === 'fixtures') fetchFixtures();
+        if (btn.dataset.page === 'macros') fetchMacros();
+    });
+});
+
+// Toast
+function toast(msg, type='info') {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.className = 'toast show ' + type;
+    setTimeout(() => t.className = 'toast', 3000);
+}
+
+// Data Fetching
+setInterval(async () => {
+    try {
+        const res = await fetch('/api/status');
+        const d = await res.json();
+        document.getElementById('val-rx').textContent = d.dmx.rxFps + ' fps';
+        document.getElementById('val-tx').textContent = d.dmx.txFps + ' fps';
+        document.getElementById('val-sacn').textContent = d.sacn.active ? 'Active' : 'Idle';
+        document.getElementById('dot-dmx').className = 'status-dot ' + (d.dmx.inputActive ? 'active' : 'inactive');
+        document.getElementById('dot-sacn').className = 'status-dot ' + (d.sacn.active ? 'active' : 'inactive');
+    } catch(e){}
+}, 2000);
+
+// DMX Bars
+function createBars(id) {
+    const c = document.getElementById(id);
+    for(let i=0; i<128; i++) {
+        let b = document.createElement('div'); b.className = 'dmx-bar'; c.appendChild(b);
+    }
+}
+createBars('bars-in'); createBars('bars-out');
+
+setInterval(async () => {
+    if(document.getElementById('page-dashboard').classList.contains('active')) {
+        try {
+            const [inR, outR] = await Promise.all([fetch('/api/dmx/input'), fetch('/api/dmx/output')]);
+            const inD = await inR.json(), outD = await outR.json();
+            const bIn = document.getElementById('bars-in').children, bOut = document.getElementById('bars-out').children;
+            for(let i=0; i<128; i++) {
+                bIn[i].style.height = (inD.channels[i]/255*100) + '%';
+                bOut[i].style.height = (outD.channels[i]/255*100) + '%';
+            }
+        } catch(e){}
+    }
+}, 500);
+
+// Settings
+async function loadConfig() {
+    try {
+        const r = await fetch('/api/config'); const c = await r.json();
+        document.getElementById('cfg-sacn-data').value = c.sacn.dataUniverse;
+        document.getElementById('cfg-sacn-trig').value = c.sacn.triggerUniverse;
+        document.getElementById('cfg-merge').value = c.merge.mode;
+        document.getElementById('cfg-smoke-ch').value = c.smoke.dmxChannel;
+        document.getElementById('cfg-smoke-burst').value = c.smoke.burstMs;
+    } catch(e){}
+}
+loadConfig();
+
+async function saveConfig() {
+    const cfg = {
+        sacn: {
+            dataUniverse: parseInt(document.getElementById('cfg-sacn-data').value),
+            triggerUniverse: parseInt(document.getElementById('cfg-sacn-trig').value)
+        },
+        merge: { mode: parseInt(document.getElementById('cfg-merge').value) },
+        smoke: {
+            dmxChannel: parseInt(document.getElementById('cfg-smoke-ch').value),
+            burstMs: parseInt(document.getElementById('cfg-smoke-burst').value),
+            cooldownMs: 60000, maxMs: 10000
+        }
+    };
+    try {
+        await fetch('/api/config', { method: 'POST', body: JSON.stringify(cfg) });
+        toast('Settings saved', 'success');
+    } catch(e) { toast('Error saving', 'error'); }
+}
+
+// Fixtures
+async function fetchFixtures() {
+    const res = await fetch('/api/fixtures');
+    const data = await res.json();
+    
+    const flist = document.getElementById('fixture-list');
+    flist.innerHTML = '';
+    data.fixtures.forEach(f => {
+        flist.innerHTML += `<tr>
+            <td>${f.id}</td><td>${f.name}</td><td>${f.start}</td><td>${f.count}</td><td>${f.group}</td>
+            <td><button class="btn btn-danger" onclick="delFixture(${f.id})">Del</button></td>
+        </tr>`;
+    });
+
+    const glist = document.getElementById('group-list');
+    glist.innerHTML = '';
+    data.groups.forEach(g => {
+        glist.innerHTML += `<tr>
+            <td>${g.id}</td><td>${g.name}</td>
+            <td><button class="btn btn-danger" onclick="delGroup(${g.id})">Del</button></td>
+        </tr>`;
+    });
+}
+async function delFixture(id) { await fetch('/api/fixtures?id='+id, {method:'DELETE'}); fetchFixtures(); }
+async function delGroup(id) { await fetch('/api/groups?id='+id, {method:'DELETE'}); fetchFixtures(); }
+async function addGroup() {
+    const name = document.getElementById('new-group-name').value;
+    if(!name) return;
+    await fetch('/api/groups', {method:'POST', body: JSON.stringify({name: name})});
+    document.getElementById('new-group-name').value = '';
+    fetchFixtures();
+}
+
+// Learn Mode State Machine
+let learnCh = 1;
+async function startLearnMode() {
+    await fetch('/api/learn/start', {method:'POST'});
+    document.getElementById('learn-modal').style.display = 'flex';
+    document.getElementById('lm-title').textContent = "Step 1: Locate Fixture";
+    document.getElementById('lm-text').textContent = "Output is blacked out. We will pulse channels one by one.";
+    document.getElementById('lm-btn-main').textContent = "Start Scan";
+    document.getElementById('lm-btn-main').onclick = learnNext;
+    document.getElementById('lm-save-form').style.display = 'none';
+}
+async function cancelLearn() {
+    await fetch('/api/learn/stop', {method:'POST'});
+    document.getElementById('learn-modal').style.display = 'none';
+}
+async function learnNext() {
+    const r = await fetch('/api/learn/next', {method:'POST'});
+    const d = await r.json();
+    learnCh = d.channel;
+    document.getElementById('lm-text').innerHTML = `Currently lighting up <b>Channel ${learnCh-1}</b>.<br><br>Did your fixture turn on?`;
+    document.getElementById('lm-btn-main').textContent = "No, Next Channel";
+    
+    // Add a "Yes" button
+    if(!document.getElementById('lm-btn-yes')) {
+        let btn = document.createElement('button');
+        btn.id = 'lm-btn-yes'; btn.className = 'btn btn-success'; btn.style.background = 'var(--green)'; btn.style.color = 'white';
+        btn.textContent = "Yes, Light is ON!";
+        btn.onclick = learnFound;
+        document.getElementById('lm-actions').prepend(btn);
+    }
+}
+async function learnFound() {
+    await fetch('/api/learn/found', {method:'POST'});
+    document.getElementById('lm-title').textContent = "Step 2: Probing RGB";
+    document.getElementById('lm-text').textContent = "Now we'll probe channels automatically to guess RGB offsets. Watch the fixture.";
+    document.getElementById('lm-btn-main').textContent = "Start Probe";
+    document.getElementById('lm-btn-main').onclick = learnProbe;
+    if(document.getElementById('lm-btn-yes')) document.getElementById('lm-btn-yes').remove();
+}
+async function learnProbe() {
+    const r = await fetch('/api/learn/probe', {method:'POST'});
+    const d = await r.json();
+    if(d.state === 6) { // LEARN_CONFIRM
+        document.getElementById('lm-title').textContent = "Step 3: Save Profile";
+        document.getElementById('lm-text').textContent = "Probing finished. Verify settings below and save.";
+        document.getElementById('lm-actions').style.display = 'none';
+        document.getElementById('lm-save-form').style.display = 'block';
+    } else {
+        document.getElementById('lm-text').textContent = "Probing... click Next Step repeatedly until finished.";
+    }
+}
+async function learnSave() {
+    const payload = {
+        name: document.getElementById('lf-name').value, group: parseInt(document.getElementById('lf-group').value),
+        count: parseInt(document.getElementById('lf-count').value), dimmer: parseInt(document.getElementById('lf-dim').value),
+        red: parseInt(document.getElementById('lf-r').value), green: parseInt(document.getElementById('lf-g').value), blue: parseInt(document.getElementById('lf-b').value)
+    };
+    await fetch('/api/learn/confirm', {method:'POST', body: JSON.stringify(payload)});
+    document.getElementById('learn-modal').style.display = 'none';
+    document.getElementById('lm-actions').style.display = 'flex';
+    toast('Fixture Saved!', 'success');
+    fetchFixtures();
+}
+
+// Macros
+async function fetchMacros() {
+    const res = await fetch('/api/macros'); const data = await res.json();
+    const list = document.getElementById('macro-list');
+    list.innerHTML = '';
+    const types = ["None","Blackout","Blind","Strobe","Rnd Strobe","Color","Smoke","Chase","Pulse"];
+    data.macros.forEach(m => {
+        list.innerHTML += `<tr>
+            <td>${m.id}</td><td>${m.name}</td><td>${types[m.type]}</td><td>Grp ${m.group} / Trig Ch ${m.triggerCh}</td>
+            <td>
+                <button class="btn btn-secondary" onclick="triggerMacro(${m.id})">▶</button>
+                <button class="btn btn-secondary" onclick="stopMacro(${m.id})">⏹</button>
+                <button class="btn btn-danger" onclick="delMacro(${m.id})">Del</button>
+            </td>
+        </tr>`;
+    });
+}
+function showMacroModal() { document.getElementById('macro-modal').style.display = 'flex'; }
+async function saveMacro() {
+    const payload = {
+        name: document.getElementById('mac-name').value, type: parseInt(document.getElementById('mac-type').value),
+        group: parseInt(document.getElementById('mac-group').value), triggerCh: parseInt(document.getElementById('mac-trig').value),
+        speed: parseInt(document.getElementById('mac-speed').value)
+    };
+    await fetch('/api/macros', {method:'POST', body: JSON.stringify(payload)});
+    document.getElementById('macro-modal').style.display = 'none';
+    fetchMacros();
+}
+async function triggerMacro(id) { await fetch('/api/macros/trigger?id='+id, {method:'POST'}); }
+async function stopMacro(id) { await fetch('/api/macros/stop?id='+id, {method:'POST'}); }
+async function delMacro(id) { await fetch('/api/macros?id='+id, {method:'DELETE'}); fetchMacros(); }
+
+</script>
+</body>
+</html>
