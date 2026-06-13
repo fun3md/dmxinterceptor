@@ -27,18 +27,26 @@ public:
     String getMAC() const { return WiFi.macAddress(); }
     int getRSSI() const { return WiFi.RSSI(); }
 
-    // Credentials loaded from config
-    String _staSSID;
-    String _staPassword;
+    // Save credentials to persistent storage
+    void saveCredentials();
+
+    // Check if we have stored credentials
+    bool hasCredentials() const { return _staSSID.length() > 0; }
 
 private:
     void startAP();
     void startSTA();
 
+    // Boot-loop detection: if we reboot multiple times without WiFi, fall back to AP
+    void resetBootCounter();
+
     bool _apMode = false;
     bool _initialized = false;
     unsigned long _lastReconnectAttempt = 0;
     int _reconnectCount = 0;
+
+    String _staSSID;
+    String _staPassword;
 };
 
 extern WiFiManager wifiManager;

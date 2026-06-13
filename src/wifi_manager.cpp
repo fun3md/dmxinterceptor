@@ -1,4 +1,5 @@
 #include "wifi_manager.h"
+#include "config_manager.h"
 #include <esp_wifi.h>
 
 WiFiManager wifiManager;
@@ -10,9 +11,21 @@ void WiFiManager::begin() {
     WiFi.mode(WIFI_STA);
 
     if (_staSSID.length() > 0) {
-        startSTA();
+        // Boot-loop detection: increment counter each boot we attempt STA
+        configManager.config().wifiBootCounter++;
+        configManager.save();
+        Serial.printf("[WIFI] Boot counter: %d\n", configManager.config().wifiBootCounter);
+
+        if (configManager.config().wifiBootCounter >= 3) {
+            Serial.println("[WIFI] Too many failed boots, forcing AP mode. Clear or update WiFi settings to retry.");
+            startAP();
+        } else {
+            startSTA();
+        }
     } else {
         Serial.println("[WIFI] No STA credentials configured, starting AP mode");
+        configManager.config().wifiBootCounter = 0;
+        configManager.save();
         startAP();
     }
 
@@ -67,6 +80,8 @@ void WiFiManager::startSTA() {
     if (WiFi.status() == WL_CONNECTED) {
         Serial.printf("[WIFI] Connected! IP: %s\n", WiFi.localIP().toString().c_str());
         Serial.printf("[WIFI] Hostname: %s\n", WIFI_HOSTNAME);
+        // Reset boot counter on successful connection
+        resetBootCounter();
     } else {
         Serial.println("[WIFI] STA connection failed, starting AP mode");
         startAP();
@@ -88,7 +103,25 @@ void WiFiManager::startAP() {
 void WiFiManager::setCredentials(const String& ssid, const String& password) {
     _staSSID = ssid;
     _staPassword = password;
+    // Whenever user explicitly sets credentials, reset the boot counter
+    resetBootCounter();
     Serial.printf("[WIFI] Credentials updated: SSID='%s'\n", ssid.c_str());
+}
+
+void WiFiManager::saveCredentials() {
+    configManager.config().wifiSSID = _staSSID;
+    configManager.config().wifiPassword = _staPassword;
+    configManager.config().wifiBootCounter = 0;
+    configManager.save();
+    Serial.println("[WIFI] Credentials saved to flash");
+}
+
+void WiFiManager::resetBootCounter() {
+    if (configManager.config().wifiBootCounter != 0) {
+        configManager.config().wifiBootCounter = 0;
+        configManager.save();
+        Serial.println("[WIFI] Boot counter reset");
+    }
 }
 
 String WiFiManager::getIP() const {

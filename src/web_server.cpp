@@ -5,6 +5,7 @@
 #include "sacn_receiver.h"
 #include "fixture_manager.h"
 #include "fx_engine.h"
+#include "artnet_sender.h"
 #include <ArduinoJson.h>
 #include <LittleFS.h>
 
@@ -49,6 +50,10 @@ void WebServer::setupAPIRoutes() {
         doc["macros"]["count"] = fxEngine.getMacroCount();
         doc["learn"]["state"] = (int)fixtureManager.getLearnState();
         doc["learn"]["channel"] = fixtureManager.getLearnCurrentChannel();
+        doc["artnet"]["enabled"]     = artnetSender.isEnabled();
+        doc["artnet"]["packetCount"] = artnetSender.getPacketCount();
+        doc["artnet"]["universe"]    = artnetSender.getUniverse();
+        doc["artnet"]["source"]      = artnetSender.getSource();
         String out; serializeJson(doc, out);
         req->send(200, "application/json", out);
     });
@@ -84,6 +89,11 @@ void WebServer::setupAPIRoutes() {
             sacnReceiver.setDataUniverse(configManager.config().sacnDataUniverse);
             sacnReceiver.setTriggerUniverse(configManager.config().sacnTriggerUniverse);
             dmxEngine.setMergeMode(configManager.config().mergeMode);
+            // Apply ArtNet settings
+            artnetSender.setEnabled(configManager.config().artnetEnabled);
+            artnetSender.setTargetIP(configManager.config().artnetTargetIP);
+            artnetSender.setUniverse(configManager.config().artnetUniverse);
+            artnetSender.setSource(configManager.config().artnetSource);
             configManager.save();
             req->send(200, "application/json", "{\"status\":\"ok\"}");
         } else {
@@ -92,7 +102,83 @@ void WebServer::setupAPIRoutes() {
     };
     _server.on("/api/config", HTTP_POST, [](AsyncWebServerRequest* req){}, NULL, configBodyHandler);
 
-    // --- WIFI SCAN ---
+    // --- ARTNET ---
+    _server.on("/api/artnet", HTTP_GET, [](AsyncWebServerRequest* req) {
+        JsonDocument doc;
+        doc["enabled"]     = artnetSender.isEnabled();
+        doc["targetIP"]    = artnetSender.getTargetIP();
+        doc["universe"]    = artnetSender.getUniverse();
+        doc["source"]      = artnetSender.getSource();
+        doc["packetCount"] = artnetSender.getPacketCount();
+        String out; serializeJson(doc, out);
+        req->send(200, "application/json", out);
+    });
+
+    _server.on("/api/artnet", HTTP_POST, [](AsyncWebServerRequest* req){}, NULL,
+        [](AsyncWebServerRequest* req, uint8_t* data, size_t len, size_t index, size_t total) {
+            JsonDocument doc;
+            if (deserializeJson(doc, (char*)data, len)) {
+                req->send(400, "application/json", "{\"error\":\"Invalid JSON\"}"); return;
+            }
+            bool    en  = doc["enabled"]  | artnetSender.isEnabled();
+            String  ip  = doc["targetIP"] | artnetSender.getTargetIP();
+            uint16_t uni = doc["universe"] | artnetSender.getUniverse();
+            uint8_t  src = doc["source"]   | artnetSender.getSource();
+            artnetSender.setEnabled(en);
+            artnetSender.setTargetIP(ip);
+            artnetSender.setUniverse(uni);
+            artnetSender.setSource(src);
+            // Persist
+            configManager.config().artnetEnabled  = en;
+            configManager.config().artnetTargetIP = ip;
+            configManager.config().artnetUniverse = uni;
+            configManager.config().artnetSource   = src;
+            configManager.save();
+            req->send(200, "application/json", "{\"status\":\"ok\"}");
+        }
+    );
+
+    // --- WIFI CONFIG ---
+    _server.on("/api/wifi", HTTP_GET, [](AsyncWebServerRequest* req) {
+        JsonDocument doc;
+        doc["ssid"] = wifiManager.getSSID();
+        doc["connected"] = wifiManager.isConnected();
+        doc["apMode"] = wifiManager.isAPMode();
+        String out; serializeJson(doc, out);
+        req->send(200, "application/json", out);
+    });
+
+    _server.on("/api/wifi", HTTP_POST, [](AsyncWebServerRequest* req){}, NULL,
+        [](AsyncWebServerRequest* req, uint8_t* data, size_t len, size_t index, size_t total) {
+            JsonDocument doc;
+            if (deserializeJson(doc, (char*)data, len)) {
+                req->send(400, "application/json", "{\"error\":\"Invalid JSON\"}"); return;
+            }
+            String ssid = doc["ssid"] | "";
+            String password = doc["password"] | "";
+            bool restart = doc["restart"] | false;
+
+            wifiManager.setCredentials(ssid, password);
+            wifiManager.saveCredentials();
+
+            if (restart) {
+                req->send(200, "application/json", "{\"status\":\"ok\",\"restarting\":true}");
+                delay(500);
+                ESP.restart();
+            } else {
+                req->send(200, "application/json", "{\"status\":\"ok\"}");
+            }
+        }
+    );
+
+    _server.on("/api/wifi/clear", HTTP_POST, [](AsyncWebServerRequest* req) {
+        // Clear stored credentials and reset boot counter
+        wifiManager.setCredentials("", "");
+        wifiManager.saveCredentials();
+        req->send(200, "application/json", "{\"status\":\"cleared\"}");
+        delay(500);
+        ESP.restart();
+    });
     _server.on("/api/wifi/scan", HTTP_POST, [](AsyncWebServerRequest* req) {
         int n = WiFi.scanNetworks(false, false);
         JsonDocument doc;

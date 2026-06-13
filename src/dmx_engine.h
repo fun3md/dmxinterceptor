@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include "config.h"
+#include "artnet_sender.h"
 
 // ============================================================================
 // DMX Engine - Handles DMX receive, merge, and transmit

@@ -119,6 +119,7 @@
     <div class="header-status">
         <span><span class="status-dot" id="dot-dmx"></span>DMX</span>
         <span><span class="status-dot" id="dot-sacn"></span>sACN</span>
+        <span><span class="status-dot" id="dot-artnet"></span>ArtNet</span>
     </div>
 </div>
 
@@ -137,6 +138,7 @@
             <div class="card"><div class="card-label">DMX Input</div><div class="card-value" id="val-rx">-- fps</div></div>
             <div class="card"><div class="card-label">DMX Output</div><div class="card-value" id="val-tx">-- fps</div></div>
             <div class="card"><div class="card-label">sACN Status</div><div class="card-value" id="val-sacn">--</div></div>
+            <div class="card"><div class="card-label">ArtNet Out</div><div class="card-value" id="val-artnet">--</div><div class="card-sub" id="val-artnet-pkts"></div></div>
         </div>
         <h3>Input Channels 1-128</h3>
         <div class="dmx-bars" id="bars-in"></div>
@@ -186,6 +188,33 @@
     <!-- Settings -->
     <div id="page-settings" class="page">
         <div class="card" style="max-width:500px">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <h3>WiFi Settings</h3>
+                <span id="wifi-status-badge" style="font-size:12px; padding:3px 10px; border-radius:20px; background:var(--red); color:white;">AP Mode</span>
+            </div>
+            <p style="color:var(--text-secondary); font-size:13px; margin-bottom:16px;">
+                Current mode: <span id="wifi-current-mode">Access Point</span>
+            </p>
+            <button class="btn btn-secondary" onclick="scanNetworks()">Scan for Networks</button>
+            <div id="wifi-scan-list" style="margin-top: 12px; max-height: 150px; overflow-y: auto;"></div>
+            <div class="form-group" style="margin-top: 16px;">
+                <label>SSID</label>
+                <input type="text" id="cfg-wifi-ssid" placeholder="Network Name">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="cfg-wifi-pass" placeholder="Password">
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-primary" onclick="saveWiFi(true)">Join & Restart</button>
+                <button class="btn btn-secondary" onclick="saveWiFi(false)">Save Only</button>
+            </div>
+            <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border);">
+                <button class="btn btn-danger" onclick="clearWiFi()" style="width:100%">Clear WiFi & Restart in AP Mode</button>
+            </div>
+        </div>
+
+        <div class="card" style="max-width:500px; margin-top:20px;">
             <h3>sACN / DMX Merge</h3>
             <div class="form-row">
                 <div class="form-group"><label>Data Universe</label><input type="number" id="cfg-sacn-data"></div>
@@ -200,6 +229,32 @@
                 <div class="form-group"><label>Burst (ms)</label><input type="number" id="cfg-smoke-burst"></div>
             </div>
             <button class="btn btn-primary" onclick="saveConfig()">Save Settings</button>
+        </div>
+
+        <div class="card" style="max-width:500px; margin-top:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin-bottom:0">ArtNet Output</h3>
+                <span id="artnet-status-badge" style="font-size:12px; padding:3px 10px; border-radius:20px; background:var(--red); color:white;">OFF</span>
+            </div>
+            <p style="color:var(--text-secondary); font-size:13px; margin:8px 0 16px;">Forward DMX data as Art-Net over WiFi (UDP port 6454).</p>
+            <div class="form-group">
+                <label>Enable</label>
+                <select id="cfg-artnet-en"><option value="0">Disabled</option><option value="1">Enabled</option></select>
+            </div>
+            <div class="form-group">
+                <label>Target IP</label>
+                <div style="display:flex; gap:8px;">
+                    <input type="text" id="cfg-artnet-ip" placeholder="255.255.255.255" style="flex:1;">
+                    <button class="btn btn-secondary" onclick="document.getElementById('cfg-artnet-ip').value='255.255.255.255'" style="white-space:nowrap;">Broadcast</button>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Universe (0-32767)</label><input type="number" id="cfg-artnet-uni" min="0" max="32767"></div>
+                <div class="form-group"><label>Source</label>
+                    <select id="cfg-artnet-src"><option value="0">DMX Input</option><option value="1">Merged Output</option></select>
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="saveArtnet()">Save ArtNet</button>
         </div>
     </div>
 </div>
@@ -275,6 +330,7 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
         document.getElementById('page-' + btn.dataset.page).classList.add('active');
         if (btn.dataset.page === 'fixtures') fetchFixtures();
         if (btn.dataset.page === 'macros') fetchMacros();
+        if (btn.dataset.page === 'settings') loadWiFiStatus();
     });
 });
 
@@ -295,6 +351,15 @@ setInterval(async () => {
         document.getElementById('val-sacn').textContent = d.sacn.active ? 'Active' : 'Idle';
         document.getElementById('dot-dmx').className = 'status-dot ' + (d.dmx.inputActive ? 'active' : 'inactive');
         document.getElementById('dot-sacn').className = 'status-dot ' + (d.sacn.active ? 'active' : 'inactive');
+        // ArtNet status
+        const artOn = d.artnet && d.artnet.enabled;
+        document.getElementById('dot-artnet').className = 'status-dot ' + (artOn ? 'active' : 'inactive');
+        document.getElementById('val-artnet').textContent = artOn ? 'Active' : 'Off';
+        if (d.artnet) {
+            document.getElementById('val-artnet-pkts').textContent = d.artnet.packetCount + ' pkts sent';
+            const badge = document.getElementById('artnet-status-badge');
+            if (badge) { badge.textContent = artOn ? 'ON' : 'OFF'; badge.style.background = artOn ? 'var(--green)' : 'var(--red)'; }
+        }
     } catch(e){}
 }, 2000);
 
@@ -330,6 +395,13 @@ async function loadConfig() {
         document.getElementById('cfg-merge').value = c.merge.mode;
         document.getElementById('cfg-smoke-ch').value = c.smoke.dmxChannel;
         document.getElementById('cfg-smoke-burst').value = c.smoke.burstMs;
+        // ArtNet
+        if (c.artnet) {
+            document.getElementById('cfg-artnet-en').value = c.artnet.enabled ? '1' : '0';
+            document.getElementById('cfg-artnet-ip').value = c.artnet.targetIP || '255.255.255.255';
+            document.getElementById('cfg-artnet-uni').value = c.artnet.universe || 0;
+            document.getElementById('cfg-artnet-src').value = c.artnet.source || 0;
+        }
     } catch(e){}
 }
 loadConfig();
@@ -351,6 +423,96 @@ async function saveConfig() {
         await fetch('/api/config', { method: 'POST', body: JSON.stringify(cfg) });
         toast('Settings saved', 'success');
     } catch(e) { toast('Error saving', 'error'); }
+}
+
+async function saveArtnet() {
+    const payload = {
+        enabled:  document.getElementById('cfg-artnet-en').value === '1',
+        targetIP: document.getElementById('cfg-artnet-ip').value,
+        universe: parseInt(document.getElementById('cfg-artnet-uni').value) || 0,
+        source:   parseInt(document.getElementById('cfg-artnet-src').value) || 0
+    };
+    try {
+        await fetch('/api/artnet', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        toast('ArtNet settings saved', 'success');
+    } catch(e) { toast('Error saving ArtNet', 'error'); }
+}
+
+// WiFi Settings
+async function loadWiFiStatus() {
+    try {
+        const r = await fetch('/api/status');
+        const d = await r.json();
+        const badge = document.getElementById('wifi-status-badge');
+        const modeText = document.getElementById('wifi-current-mode');
+        if (badge && modeText) {
+            if (d.wifi.apMode) {
+                badge.textContent = 'AP Mode';
+                badge.style.background = 'var(--orange)';
+                modeText.textContent = 'Access Point (' + d.wifi.ip + ')';
+            } else if (d.wifi.connected) {
+                badge.textContent = 'STA';
+                badge.style.background = 'var(--green)';
+                modeText.textContent = 'Connected to "' + d.wifi.ssid + '" (' + d.wifi.ip + ')';
+            } else {
+                badge.textContent = 'Disconnected';
+                badge.style.background = 'var(--red)';
+                modeText.textContent = 'Disconnected';
+            }
+            // Fill input fields
+            document.getElementById('cfg-wifi-ssid').value = d.wifi.ssid || '';
+        }
+    } catch(e) {}
+}
+
+async function scanNetworks() {
+    const list = document.getElementById('wifi-scan-list');
+    list.innerHTML = '<p style="color:var(--text-secondary); font-size:13px;">Scanning...</p>';
+    try {
+        const r = await fetch('/api/wifi/scan', { method: 'POST' });
+        const d = await r.json();
+        list.innerHTML = '';
+        if (d.networks && d.networks.length > 0) {
+            d.networks.forEach(n => {
+                let bar = `<div onclick="document.getElementById('cfg-wifi-ssid').value='${n.ssid}'" style="padding:6px 8px; border-radius:6px; margin-bottom:4px; cursor:pointer; font-size:13px; display:flex; justify-content:space-between; align-items:center; background:var(--bg-primary); border:1px solid var(--border);" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+                    <span>${n.secure ? '&#128274; ' : ''}${n.ssid}</span>
+                    <span style="color:var(--text-muted);">${n.rssi} dBm</span>
+                </div>`;
+                list.insertAdjacentHTML('beforeend', bar);
+            });
+        } else {
+            list.innerHTML = '<p style="color:var(--text-secondary); font-size:13px;">No networks found.</p>';
+        }
+    } catch(e) {
+        list.innerHTML = '<p style="color:var(--red); font-size:13px;">Scan failed.</p>';
+    }
+}
+
+async function saveWiFi(restart) {
+    const ssid = document.getElementById('cfg-wifi-ssid').value.trim();
+    const password = document.getElementById('cfg-wifi-pass').value;
+    if (!ssid) { toast('Please enter a network name (SSID)', 'error'); return; }
+    const payload = { ssid: ssid, password: password, restart: restart };
+    try {
+        const res = await fetch('/api/wifi', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify(payload)
+        });
+        if (restart) {
+            toast('Saving credentials and restarting...', 'info');
+        } else {
+            toast('WiFi credentials saved', 'success');
+        }
+    } catch(e) { toast('Error saving WiFi settings', 'error'); }
+}
+
+async function clearWiFi() {
+    if (!confirm('This will erase the saved WiFi credentials and restart the device in AP mode. Continue?')) return;
+    try {
+        await fetch('/api/wifi/clear', { method: 'POST' });
+        toast('Clearing credentials and restarting...', 'info');
+    } catch(e) { toast('Error clearing WiFi settings', 'error'); }
 }
 
 // Fixtures

@@ -68,6 +68,7 @@ String ConfigManager::toJson() const {
     // WiFi
     doc["wifi"]["ssid"]     = _config.wifiSSID;
     doc["wifi"]["password"] = _config.wifiPassword;
+    doc["wifi"]["bootCounter"] = _config.wifiBootCounter;
 
     // sACN
     doc["sacn"]["dataUniverse"]    = _config.sacnDataUniverse;
@@ -82,6 +83,12 @@ String ConfigManager::toJson() const {
     doc["smoke"]["burstMs"]     = _config.smokeBurstMs;
     doc["smoke"]["cooldownMs"]  = _config.smokeCooldownMs;
     doc["smoke"]["maxMs"]       = _config.smokeMaxMs;
+
+    // ArtNet
+    doc["artnet"]["enabled"]  = _config.artnetEnabled;
+    doc["artnet"]["targetIP"] = _config.artnetTargetIP;
+    doc["artnet"]["universe"] = _config.artnetUniverse;
+    doc["artnet"]["source"]   = _config.artnetSource;
 
     String output;
     serializeJsonPretty(doc, output);
@@ -99,6 +106,7 @@ bool ConfigManager::fromJson(const String& json) {
     // WiFi
     _config.wifiSSID     = doc["wifi"]["ssid"] | String("");
     _config.wifiPassword = doc["wifi"]["password"] | String("");
+    _config.wifiBootCounter = doc["wifi"]["bootCounter"] | (uint8_t)0;
 
     // sACN
     _config.sacnDataUniverse    = doc["sacn"]["dataUniverse"] | SACN_DEFAULT_UNIVERSE;
@@ -113,6 +121,12 @@ bool ConfigManager::fromJson(const String& json) {
     _config.smokeBurstMs     = doc["smoke"]["burstMs"] | (uint32_t)SMOKE_BURST_MS;
     _config.smokeCooldownMs  = doc["smoke"]["cooldownMs"] | (uint32_t)SMOKE_COOLDOWN_MS;
     _config.smokeMaxMs       = doc["smoke"]["maxMs"] | (uint32_t)SMOKE_MAX_MS;
+
+    // ArtNet
+    _config.artnetEnabled  = doc["artnet"]["enabled"]  | false;
+    _config.artnetTargetIP = doc["artnet"]["targetIP"] | String(ARTNET_DEFAULT_TARGET);
+    _config.artnetUniverse = doc["artnet"]["universe"] | (uint16_t)ARTNET_DEFAULT_UNIVERSE;
+    _config.artnetSource   = doc["artnet"]["source"]   | (uint8_t)0;
 
     return true;
 }

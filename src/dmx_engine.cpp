@@ -5,6 +5,14 @@
 DMXEngine dmxEngine;
 
 void DMXEngine::begin() {
+    // Guard against double-init: dmx_driver_install() crashes the ESP if called
+    // a second time for the same port (the library explicitly rejects it).
+    if (dmx_driver_is_installed(DMX_INPUT_PORT) ||
+        dmx_driver_is_installed(DMX_OUTPUT_PORT)) {
+        Serial.println("[DMX] Already initialized, skipping.");
+        return;
+    }
+
     Serial.println("[DMX] Initializing DMX Engine...");
 
     // Create buffer mutex for thread-safe access
@@ -13,24 +21,32 @@ void DMXEngine::begin() {
     // ---------------------------------------------------------------
     // DMX INPUT (UART1) - Receive mode
     // ---------------------------------------------------------------
+    Serial.println("[DMX] Installing input driver..."); Serial.flush();
     dmx_config_t rxConfig = DMX_CONFIG_DEFAULT;
     dmx_personality_t rxPersonalities[] = {{DMX_CHANNELS, "RX"}};
-    dmx_driver_install(DMX_INPUT_PORT, &rxConfig, rxPersonalities, 1);
-    dmx_set_pin(DMX_INPUT_PORT, DMX_INPUT_TX_PIN, DMX_INPUT_RX_PIN, DMX_INPUT_EN_PIN);
+    bool rxOk = dmx_driver_install(DMX_INPUT_PORT, &rxConfig, rxPersonalities, 1);
+    Serial.printf("[DMX] Input driver install: %s\n", rxOk ? "OK" : "FAIL"); Serial.flush();
 
-    Serial.printf("[DMX] Input port %d configured: RX=%d, TX=%d, EN=%d\n",
-                  DMX_INPUT_PORT, DMX_INPUT_RX_PIN, DMX_INPUT_TX_PIN, DMX_INPUT_EN_PIN);
+    bool rxPinOk = dmx_set_pin(DMX_INPUT_PORT, DMX_INPUT_TX_PIN, DMX_INPUT_RX_PIN, DMX_INPUT_EN_PIN);
+    Serial.printf("[DMX] Input port %d pin set: %s (RX=%d, TX=%d, EN=%d)\n",
+                  DMX_INPUT_PORT, rxPinOk ? "OK" : "FAIL",
+                  DMX_INPUT_RX_PIN, DMX_INPUT_TX_PIN, DMX_INPUT_EN_PIN);
+    Serial.flush();
 
     // ---------------------------------------------------------------
     // DMX OUTPUT (UART2) - Transmit mode
     // ---------------------------------------------------------------
+    Serial.printf("[DMX] Installing output driver on port %d...\n", DMX_OUTPUT_PORT); Serial.flush();
     dmx_config_t txConfig = DMX_CONFIG_DEFAULT;
     dmx_personality_t txPersonalities[] = {{DMX_CHANNELS, "TX"}};
-    dmx_driver_install(DMX_OUTPUT_PORT, &txConfig, txPersonalities, 1);
-    dmx_set_pin(DMX_OUTPUT_PORT, DMX_OUTPUT_TX_PIN, DMX_OUTPUT_RX_PIN, DMX_OUTPUT_EN_PIN);
+    bool txOk = dmx_driver_install(DMX_OUTPUT_PORT, &txConfig, txPersonalities, 1);
+    Serial.printf("[DMX] Output driver install: %s\n", txOk ? "OK" : "FAIL"); Serial.flush();
 
-    Serial.printf("[DMX] Output port %d configured: TX=%d, RX=%d, EN=%d\n",
-                  DMX_OUTPUT_PORT, DMX_OUTPUT_TX_PIN, DMX_OUTPUT_RX_PIN, DMX_OUTPUT_EN_PIN);
+    bool txPinOk = dmx_set_pin(DMX_OUTPUT_PORT, DMX_OUTPUT_TX_PIN, DMX_OUTPUT_RX_PIN, DMX_OUTPUT_EN_PIN);
+    Serial.printf("[DMX] Output port %d pin set: %s (TX=%d, RX=%d, EN=%d)\n",
+                  DMX_OUTPUT_PORT, txPinOk ? "OK" : "FAIL",
+                  DMX_OUTPUT_TX_PIN, DMX_OUTPUT_RX_PIN, DMX_OUTPUT_EN_PIN);
+    Serial.flush();
 
     _lastFpsCalcTime = millis();
 

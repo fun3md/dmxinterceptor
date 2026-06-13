@@ -15,6 +15,7 @@ struct AppConfig {
     // WiFi
     String wifiSSID;
     String wifiPassword;
+    uint8_t wifiBootCounter = 0;
 
     // sACN
     uint16_t sacnDataUniverse    = SACN_DEFAULT_UNIVERSE;
@@ -29,6 +30,12 @@ struct AppConfig {
     uint32_t smokeBurstMs    = SMOKE_BURST_MS;
     uint32_t smokeCooldownMs = SMOKE_COOLDOWN_MS;
     uint32_t smokeMaxMs      = SMOKE_MAX_MS;
+
+    // ArtNet output
+    bool     artnetEnabled  = ARTNET_DEFAULT_ENABLED;
+    String   artnetTargetIP = ARTNET_DEFAULT_TARGET;
+    uint16_t artnetUniverse = ARTNET_DEFAULT_UNIVERSE;
+    uint8_t  artnetSource   = 0;  // 0 = DMX input, 1 = merged output
 };
 
 class ConfigManager {

@@ -15,6 +15,7 @@
 #include "web_server.h"
 #include "fixture_manager.h"
 #include "fx_engine.h"
+#include "artnet_sender.h"
 
 // ============================================================================
 // FreeRTOS Task Handles
@@ -103,7 +104,14 @@ void setup() {
     dmxEngine.setMergeMode(configManager.config().mergeMode);
     dmxEngine.begin();
 
-    // 6. Web server
+    // 6. ArtNet sender (after WiFi is up)
+    artnetSender.setEnabled(configManager.config().artnetEnabled);
+    artnetSender.setTargetIP(configManager.config().artnetTargetIP);
+    artnetSender.setUniverse(configManager.config().artnetUniverse);
+    artnetSender.setSource(configManager.config().artnetSource);
+    artnetSender.begin();
+
+    // 7. Web server
     webServer.begin();
 
     Serial.printf("[MAIN] Web UI: http://%s/\n\n", wifiManager.getIP().c_str());
@@ -137,6 +145,27 @@ void loop() {
     } else if (fixtureManager.getLearnState() == LEARN_PROBING_DIMMER ||
                fixtureManager.getLearnState() == LEARN_PROBING_RGB) {
         fixtureManager.learnProbe(dmxEngine.getFxOverlay(), dmxEngine.getFxMask());
+    }
+
+    // --- ArtNet output (runs on Core 0 alongside WiFi stack) ---
+    if (artnetSender.isEnabled()) {
+        if (artnetSender.getSource() == 0) {
+            // Source: raw DMX input — send only when a new frame has arrived
+            static unsigned long lastArtNetRxCount = 0;
+            unsigned long curRxCount = dmxEngine.getRxPacketCount();
+            if (curRxCount != lastArtNetRxCount) {
+                lastArtNetRxCount = curRxCount;
+                artnetSender.send(dmxEngine.getInputBuffer() + 1, DMX_CHANNELS);
+            }
+        } else {
+            // Source: merged output — rate-limit to ~40 fps
+            static unsigned long lastArtNetTx = 0;
+            unsigned long now = millis();
+            if (now - lastArtNetTx >= 25) {
+                lastArtNetTx = now;
+                artnetSender.send(dmxEngine.getOutputBuffer() + 1, DMX_CHANNELS);
+            }
+        }
     }
 
     // Status LED
