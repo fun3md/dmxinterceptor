@@ -19,12 +19,25 @@ struct FixtureProfile {
     char     name[MAX_FIXTURE_NAME] = "";
     uint16_t startChannel = 0;       // 1-based DMX start address
     uint8_t  channelCount = 1;       // Total channels this fixture uses
-    uint8_t  dimmerOffset = 0;       // Offset from startChannel (0-based)
+    uint8_t  dimmerOffset = 255;     // Offset from startChannel (0-based), 255 = not available
     uint8_t  redOffset    = 255;     // 255 = not available
     uint8_t  greenOffset  = 255;
     uint8_t  blueOffset   = 255;
     uint8_t  whiteOffset  = 255;
+    uint8_t  warmWhiteOffset = 255;
+    uint8_t  coolWhiteOffset = 255;
+    uint8_t  amberOffset  = 255;
+    uint8_t  uvOffset     = 255;
     uint8_t  strobeOffset = 255;
+    uint8_t  panOffset    = 255;
+    uint8_t  tiltOffset   = 255;
+    uint8_t  focusOffset  = 255;
+    uint8_t  prismOffset  = 255;
+    uint8_t  effectOffset = 255;
+    uint8_t  goboOffset   = 255;
+    uint8_t  speedOffset  = 255;
+    uint8_t  smokeOffset  = 255;
+    uint8_t  fanOffset    = 255;
     uint8_t  groupId      = 0;      // Which group this fixture belongs to
 };
 

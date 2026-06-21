@@ -36,6 +36,12 @@ struct AppConfig {
     String   artnetTargetIP = ARTNET_DEFAULT_TARGET;
     uint16_t artnetUniverse = ARTNET_DEFAULT_UNIVERSE;
     uint8_t  artnetSource   = 0;  // 0 = DMX input, 1 = merged output
+
+    // OSC input
+    bool     oscEnabled      = OSC_DEFAULT_ENABLED;
+    uint16_t oscPort         = OSC_DEFAULT_PORT;
+    bool     oscFeedbackEnabled = OSC_DEFAULT_FEEDBACK_ENABLED;
+    uint16_t oscFeedbackPort    = OSC_DEFAULT_FEEDBACK_PORT;
 };
 
 class ConfigManager {

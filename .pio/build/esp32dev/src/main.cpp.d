@@ -222,4 +222,7 @@
  .pio/libdeps/esp32dev/ESPAsyncWebServer/src/WebHandlerImpl.h \
  .pio/libdeps/esp32dev/ESPAsyncWebServer/src/WebResponseImpl.h \
  C:/Users/svandrey/.platformio/packages/framework-arduinoespressif32/cores/esp32/StreamString.h \
- src/fixture_manager.h src/fx_engine.h
+ src/fixture_manager.h src/fx_engine.h src/osc_receiver.h \
+ .pio/libdeps/esp32dev/OSC/OSCMessage.h \
+ .pio/libdeps/esp32dev/OSC/OSCData.h \
+ .pio/libdeps/esp32dev/OSC/OSCTiming.h

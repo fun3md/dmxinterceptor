@@ -229,4 +229,7 @@
  C:/Users/svandrey/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/lwip/lwip/src/include/lwip/priv/memp_priv.h \
  C:/Users/svandrey/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/lwip/lwip/src/include/lwip/priv/mem_priv.h \
  .pio/libdeps/esp32-s3-zero/ESPAsyncE131/RingBuf.h src/fixture_manager.h \
- src/fx_engine.h
+ src/fx_engine.h src/osc_receiver.h \
+ .pio/libdeps/esp32-s3-zero/OSC/OSCMessage.h \
+ .pio/libdeps/esp32-s3-zero/OSC/OSCData.h \
+ .pio/libdeps/esp32-s3-zero/OSC/OSCTiming.h

@@ -6,6 +6,7 @@
 #include "fixture_manager.h"
 #include "fx_engine.h"
 #include "artnet_sender.h"
+#include "osc_receiver.h"
 #include <ArduinoJson.h>
 #include <LittleFS.h>
 
@@ -54,25 +55,36 @@ void WebServer::setupAPIRoutes() {
         doc["artnet"]["packetCount"] = artnetSender.getPacketCount();
         doc["artnet"]["universe"]    = artnetSender.getUniverse();
         doc["artnet"]["source"]      = artnetSender.getSource();
+        doc["osc"]["enabled"]        = oscReceiver.isEnabled();
+        doc["osc"]["port"]           = oscReceiver.getPort();
+        doc["osc"]["feedbackEnabled"] = oscReceiver.isFeedbackEnabled();
+        doc["osc"]["feedbackPort"]   = oscReceiver.getFeedbackPort();
+        doc["osc"]["packetCount"]    = oscReceiver.getPacketCount();
+        doc["osc"]["lastPacketTime"] = oscReceiver.getLastPacketTime();
         String out; serializeJson(doc, out);
         req->send(200, "application/json", out);
     });
 
     // --- DMX BUFFERS ---
+    // Handlers run on the async-TCP task (Core 0).  DMX buffers are written
+    // by the Core 1 DMX tasks, so we use the thread-safe copy helpers to
+    // take a consistent snapshot of 513 bytes in one shot.
     _server.on("/api/dmx/input", HTTP_GET, [](AsyncWebServerRequest* req) {
-        const uint8_t* buf = dmxEngine.getInputBuffer();
+        static uint8_t snapshot[DMX_PACKET_SIZE_FULL];
+        dmxEngine.copyInputBuffer(snapshot, DMX_PACKET_SIZE_FULL);
         JsonDocument doc;
         JsonArray ch = doc["channels"].to<JsonArray>();
-        for (int i = 1; i <= DMX_CHANNELS; i++) ch.add(buf[i]);
+        for (int i = 1; i <= DMX_CHANNELS; i++) ch.add(snapshot[i]);
         String out; serializeJson(doc, out);
         req->send(200, "application/json", out);
     });
 
     _server.on("/api/dmx/output", HTTP_GET, [](AsyncWebServerRequest* req) {
-        const uint8_t* buf = dmxEngine.getOutputBuffer();
+        static uint8_t snapshot[DMX_PACKET_SIZE_FULL];
+        dmxEngine.copyOutputBuffer(snapshot, DMX_PACKET_SIZE_FULL);
         JsonDocument doc;
         JsonArray ch = doc["channels"].to<JsonArray>();
-        for (int i = 1; i <= DMX_CHANNELS; i++) ch.add(buf[i]);
+        for (int i = 1; i <= DMX_CHANNELS; i++) ch.add(snapshot[i]);
         String out; serializeJson(doc, out);
         req->send(200, "application/json", out);
     });
@@ -94,6 +106,11 @@ void WebServer::setupAPIRoutes() {
             artnetSender.setTargetIP(configManager.config().artnetTargetIP);
             artnetSender.setUniverse(configManager.config().artnetUniverse);
             artnetSender.setSource(configManager.config().artnetSource);
+            // Apply OSC settings
+            oscReceiver.setEnabled(configManager.config().oscEnabled);
+            oscReceiver.setPort(configManager.config().oscPort);
+            oscReceiver.setFeedbackEnabled(configManager.config().oscFeedbackEnabled);
+            oscReceiver.setFeedbackPort(configManager.config().oscFeedbackPort);
             configManager.save();
             req->send(200, "application/json", "{\"status\":\"ok\"}");
         } else {
@@ -202,7 +219,7 @@ void WebServer::setupAPIRoutes() {
         req->send(200, "application/json", out);
     });
 
-    // POST /api/fixtures - add or update fixture
+    // POST /api/fixtures - add or update fixture(s)
     _server.on("/api/fixtures", HTTP_POST, [](AsyncWebServerRequest* req){}, NULL,
         [](AsyncWebServerRequest* req, uint8_t* data, size_t len, size_t index, size_t total) {
             JsonDocument doc;
@@ -210,24 +227,50 @@ void WebServer::setupAPIRoutes() {
                 req->send(400, "application/json", "{\"error\":\"Invalid JSON\"}");
                 return;
             }
-            FixtureProfile f;
-            strlcpy(f.name, doc["name"] | "Fixture", MAX_FIXTURE_NAME);
-            f.startChannel = doc["start"] | 1;
-            f.channelCount = doc["count"] | 1;
-            f.dimmerOffset = doc["dimmer"] | 0;
-            f.redOffset    = doc["red"] | 255;
-            f.greenOffset  = doc["green"] | 255;
-            f.blueOffset   = doc["blue"] | 255;
-            f.whiteOffset  = doc["white"] | 255;
-            f.strobeOffset = doc["strobe"] | 255;
-            f.groupId      = doc["group"] | 0;
 
-            uint16_t updateId = doc["id"] | 0;
-            if (updateId > 0) {
-                fixtureManager.updateFixture(updateId, f);
+            auto processFixture = [](JsonObjectConst obj) -> bool {
+                FixtureProfile f;
+                strlcpy(f.name, obj["name"] | "Fixture", MAX_FIXTURE_NAME);
+                f.startChannel = obj["start"] | 1;
+                f.channelCount = obj["count"] | 1;
+                f.dimmerOffset = obj["dimmer"] | 255;
+                f.redOffset    = obj["red"] | 255;
+                f.greenOffset  = obj["green"] | 255;
+                f.blueOffset   = obj["blue"] | 255;
+                f.whiteOffset  = obj["white"] | 255;
+                f.warmWhiteOffset  = obj["warmWhite"] | 255;
+                f.coolWhiteOffset  = obj["coolWhite"] | 255;
+                f.amberOffset  = obj["amber"] | 255;
+                f.uvOffset     = obj["uv"] | 255;
+                f.strobeOffset = obj["strobe"] | 255;
+                f.panOffset    = obj["pan"] | 255;
+                f.tiltOffset   = obj["tilt"] | 255;
+                f.focusOffset  = obj["focus"] | 255;
+                f.prismOffset  = obj["prism"] | 255;
+                f.effectOffset = obj["effect"] | 255;
+                f.goboOffset   = obj["gobo"] | 255;
+                f.speedOffset  = obj["speed"] | 255;
+                f.smokeOffset  = obj["smoke"] | 255;
+                f.fanOffset    = obj["fan"] | 255;
+                f.groupId      = obj["group"] | 0;
+
+                uint16_t updateId = obj["id"] | 0;
+                if (updateId > 0) {
+                    return fixtureManager.updateFixture(updateId, f);
+                } else {
+                    return fixtureManager.addFixture(f);
+                }
+            };
+
+            bool ok = true;
+            if (doc.is<JsonArray>()) {
+                for (JsonObjectConst obj : doc.as<JsonArray>()) {
+                    if (!processFixture(obj)) { ok = false; }
+                }
             } else {
-                fixtureManager.addFixture(f);
+                ok = processFixture(doc.as<JsonObjectConst>());
             }
+
             req->send(200, "application/json", "{\"status\":\"ok\"}");
         }
     );
@@ -260,6 +303,33 @@ void WebServer::setupAPIRoutes() {
         req->send(200, "application/json", "{\"status\":\"ok\"}");
     });
 
+        // --- COLOR PALETTE ---
+    _server.on("/api/palette", HTTP_GET, [](AsyncWebServerRequest* req) {
+        JsonDocument doc;
+        JsonArray arr = doc["palette"].to<JsonArray>();
+        // Palette is defined in fx_engine.h as COLOR_PALETTE
+        // We'll hardcode the same values here for the API
+        struct { uint8_t r, g, b; const char* name; } colors[] = {
+            { 255,   0,   0, "Red" },
+            { 255, 128,   0, "Orange" },
+            { 255, 255,   0, "Yellow" },
+            {   0, 255,   0, "Green" },
+            {   0, 255, 255, "Cyan" },
+            {   0,   0, 255, "Blue" },
+            { 128,   0, 255, "Purple" },
+            { 255, 255, 255, "White" },
+        };
+        for (int i = 0; i < 8; i++) {
+            JsonObject c = arr.add<JsonObject>();
+            c["r"] = colors[i].r;
+            c["g"] = colors[i].g;
+            c["b"] = colors[i].b;
+            c["name"] = colors[i].name;
+        }
+        String out; serializeJson(doc, out);
+        req->send(200, "application/json", out);
+    });
+
     // --- MACROS ---
     _server.on("/api/macros", HTTP_GET, [](AsyncWebServerRequest* req) {
         JsonDocument doc;
@@ -282,9 +352,20 @@ void WebServer::setupAPIRoutes() {
             m.sacnThreshold = doc["threshold"] | 128;
             m.intensity = doc["intensity"] | 255;
             m.speedMs   = doc["speed"] | 100;
+            m.fadeMs    = doc["fade"] | 0;
+            m.channelMask = doc["chMask"] | CH_ALL;
+            m.paletteIdx = doc["palette"] | 0;
             m.r         = doc["r"] | 255;
             m.g         = doc["g"] | 255;
             m.b         = doc["b"] | 255;
+            m.blindR    = doc["blindR"] | 255;
+            m.blindG    = doc["blindG"] | 255;
+            m.blindB    = doc["blindB"] | 255;
+            m.blindW    = doc["blindW"] | 0;
+            m.blindWW   = doc["blindWW"] | 0;
+            m.blindCW   = doc["blindCW"] | 0;
+            m.blindAmber = doc["blindAmber"] | 0;
+            m.blindUV   = doc["blindUV"] | 0;
             m.durationMs = doc["duration"] | 3000;
 
             uint16_t updateId = doc["id"] | 0;
@@ -371,16 +452,68 @@ void WebServer::setupAPIRoutes() {
             FixtureProfile& lf = fixtureManager.getLearnFixture();
             strlcpy(lf.name, doc["name"] | "Learned", MAX_FIXTURE_NAME);
             lf.channelCount = doc["count"] | lf.channelCount;
-            lf.dimmerOffset = doc["dimmer"] | lf.dimmerOffset;
-            lf.redOffset    = doc["red"] | lf.redOffset;
-            lf.greenOffset  = doc["green"] | lf.greenOffset;
-            lf.blueOffset   = doc["blue"] | lf.blueOffset;
+            lf.dimmerOffset = doc["dimmer"] | 255;
+            lf.redOffset    = doc["red"] | 255;
+            lf.greenOffset  = doc["green"] | 255;
+            lf.blueOffset   = doc["blue"] | 255;
+            lf.whiteOffset  = doc["white"] | 255;
+            lf.warmWhiteOffset = doc["warmWhite"] | 255;
+            lf.coolWhiteOffset = doc["coolWhite"] | 255;
+            lf.amberOffset  = doc["amber"] | 255;
+            lf.uvOffset     = doc["uv"] | 255;
+            lf.strobeOffset = doc["strobe"] | 255;
+            lf.panOffset    = doc["pan"] | 255;
+            lf.tiltOffset   = doc["tilt"] | 255;
+            lf.focusOffset  = doc["focus"] | 255;
+            lf.prismOffset  = doc["prism"] | 255;
+            lf.effectOffset = doc["effect"] | 255;
+            lf.goboOffset   = doc["gobo"] | 255;
+            lf.speedOffset  = doc["speed"] | 255;
+            lf.smokeOffset  = doc["smoke"] | 255;
+            lf.fanOffset    = doc["fan"] | 255;
             lf.groupId      = doc["group"] | 0;
 
             fixtureManager.addFixture(lf);
             fixtureManager.stopLearn();
             memset(dmxEngine.getFxOverlay(), 0, DMX_CHANNELS);
             memset(dmxEngine.getFxMask(), 0, DMX_CHANNELS);
+            req->send(200, "application/json", "{\"status\":\"ok\"}");
+        }
+    );
+
+    // --- OSC CONFIG ---
+    _server.on("/api/osc", HTTP_GET, [](AsyncWebServerRequest* req) {
+        JsonDocument doc;
+        doc["enabled"]        = oscReceiver.isEnabled();
+        doc["port"]           = oscReceiver.getPort();
+        doc["feedbackEnabled"] = oscReceiver.isFeedbackEnabled();
+        doc["feedbackPort"]   = oscReceiver.getFeedbackPort();
+        doc["packetCount"]    = oscReceiver.getPacketCount();
+        doc["lastPacketTime"] = oscReceiver.getLastPacketTime();
+        String out; serializeJson(doc, out);
+        req->send(200, "application/json", out);
+    });
+
+    _server.on("/api/osc", HTTP_POST, [](AsyncWebServerRequest* req){}, NULL,
+        [](AsyncWebServerRequest* req, uint8_t* data, size_t len, size_t index, size_t total) {
+            JsonDocument doc;
+            if (deserializeJson(doc, (char*)data, len)) {
+                req->send(400, "application/json", "{\"error\":\"Invalid JSON\"}"); return;
+            }
+            bool en       = doc["enabled"]        | oscReceiver.isEnabled();
+            uint16_t port = doc["port"]           | oscReceiver.getPort();
+            bool fbEn     = doc["feedbackEnabled"] | oscReceiver.isFeedbackEnabled();
+            uint16_t fbPort = doc["feedbackPort"] | oscReceiver.getFeedbackPort();
+            oscReceiver.setEnabled(en);
+            oscReceiver.setPort(port);
+            oscReceiver.setFeedbackEnabled(fbEn);
+            oscReceiver.setFeedbackPort(fbPort);
+            // Persist
+            configManager.config().oscEnabled        = en;
+            configManager.config().oscPort           = port;
+            configManager.config().oscFeedbackEnabled = fbEn;
+            configManager.config().oscFeedbackPort    = fbPort;
+            configManager.save();
             req->send(200, "application/json", "{\"status\":\"ok\"}");
         }
     );

@@ -54,14 +54,17 @@ void DMXEngine::begin() {
 }
 
 void DMXEngine::rxTask() {
-    // Wait for a DMX packet on the input port
+    // Wait for a DMX packet on the input port.
+    // DMX_TIMEOUT_TICK = 1250 ms (per DMX spec).
     dmx_packet_t packet;
     int size = dmx_receive(DMX_INPUT_PORT, &packet, DMX_TIMEOUT_TICK);
 
     if (size > 0) {
         // Valid packet received
         if (!packet.err) {
-            if (xSemaphoreTake(_bufferMutex, pdMS_TO_TICKS(1)) == pdTRUE) {
+            // Hold the mutex while dmx_read() copies into _inputBuffer so the
+            // web server (Core 0) never sees a half-updated buffer.
+            if (xSemaphoreTake(_bufferMutex, pdMS_TO_TICKS(5)) == pdTRUE) {
                 dmx_read(DMX_INPUT_PORT, _inputBuffer, size);
                 xSemaphoreGive(_bufferMutex);
             }
@@ -72,7 +75,7 @@ void DMXEngine::rxTask() {
             _rxFrameCount++;
         }
     } else {
-        // Timeout - no DMX signal
+        // dmx_receive() timed out: no complete DMX frame in the last ~1.25 s.
         if (_dmxInputActive && (millis() - _lastRxTime > 1000)) {
             _dmxInputActive = false;
             Serial.println("[DMX] Input signal lost!");
@@ -81,7 +84,7 @@ void DMXEngine::rxTask() {
 }
 
 void DMXEngine::txTask() {
-    // Merge all sources into the output buffer
+    // Merge all sources into the output buffer (always, even under contention).
     mergeBuffers();
 
     // Write merged data and send
@@ -105,34 +108,82 @@ void DMXEngine::txTask() {
 }
 
 void DMXEngine::mergeBuffers() {
-    if (xSemaphoreTake(_bufferMutex, pdMS_TO_TICKS(1)) == pdTRUE) {
-        // Start code is always 0x00 for standard DMX
-        _outputBuffer[0] = 0x00;
+    // Take a short-lived snapshot of all source buffers under the mutex,
+    // then build _outputBuffer from the local copy.  This guarantees the
+    // output is refreshed EVERY frame — the previous version could silently
+    // drop the merge when the mutex was contended, leaving stale DMX on
+    // the output (which is what was producing the "frozen output" look
+    // when the web interface was hammering the API).
+    uint8_t localInput[DMX_PACKET_SIZE_FULL];
+    uint8_t localSacn[DMX_CHANNELS];
+    uint8_t localFxOverlay[DMX_CHANNELS];
+    uint8_t localFxMask[DMX_CHANNELS];
 
-        // Merge channels 1-512 (buffer index 1-512)
-        for (int i = 0; i < DMX_CHANNELS; i++) {
-            uint8_t inputVal = _inputBuffer[i + 1];  // +1 to skip start code
-            uint8_t sacnVal  = _sacnBuffer[i];
-            uint8_t fxVal    = _fxOverlay[i];
-            bool    fxActive = _fxMask[i] != 0;
-
-            if (fxActive) {
-                // FX takes full control of this channel
-                _outputBuffer[i + 1] = fxVal;
-            } else if (sacnVal > 0) {
-                // sACN merge
-                if (_mergeMode == MERGE_HTP) {
-                    _outputBuffer[i + 1] = max(inputVal, sacnVal);
-                } else {
-                    // LTP: sACN overrides if non-zero
-                    _outputBuffer[i + 1] = sacnVal;
-                }
-            } else {
-                // Pure pass-through
-                _outputBuffer[i + 1] = inputVal;
-            }
-        }
-
+    if (xSemaphoreTake(_bufferMutex, pdMS_TO_TICKS(2)) == pdTRUE) {
+        memcpy(localInput,     _inputBuffer, DMX_PACKET_SIZE_FULL);
+        memcpy(localSacn,      _sacnBuffer,  DMX_CHANNELS);
+        memcpy(localFxOverlay, _fxOverlay,   DMX_CHANNELS);
+        memcpy(localFxMask,    _fxMask,      DMX_CHANNELS);
         xSemaphoreGive(_bufferMutex);
+    } else {
+        // Mutex contended — fall back to a lock-free copy.  Byte-atomic on
+        // ESP32; worst case is one frame with a torn read (the next frame
+        // is consistent).
+        memcpy(localInput,     _inputBuffer, DMX_PACKET_SIZE_FULL);
+        memcpy(localSacn,      _sacnBuffer,  DMX_CHANNELS);
+        memcpy(localFxOverlay, _fxOverlay,   DMX_CHANNELS);
+        memcpy(localFxMask,    _fxMask,      DMX_CHANNELS);
     }
+
+    // Start code is always 0x00 for standard DMX
+    localInput[0] = 0x00;
+
+    // Merge channels 1-512 (buffer index 1-512)
+    for (int i = 0; i < DMX_CHANNELS; i++) {
+        uint8_t inputVal = localInput[i + 1];   // +1 to skip start code
+        uint8_t sacnVal  = localSacn[i];
+        uint8_t fxVal    = localFxOverlay[i];
+        bool    fxActive = localFxMask[i] != 0;
+
+        if (fxActive) {
+            // FX takes full control of this channel
+            localInput[i + 1] = fxVal;
+        } else if (sacnVal > 0) {
+            // sACN merge
+            if (_mergeMode == MERGE_HTP) {
+                localInput[i + 1] = max(inputVal, sacnVal);
+            } else {
+                // LTP: sACN overrides if non-zero
+                localInput[i + 1] = sacnVal;
+            }
+        } else {
+            // Pure pass-through
+            localInput[i + 1] = inputVal;
+        }
+    }
+
+    // Publish the merged frame.  _outputBuffer is only ever written from
+    // this Core-1 task, so no extra lock is required.
+    memcpy(_outputBuffer, localInput, DMX_PACKET_SIZE_FULL);
+}
+
+void DMXEngine::copyInputBuffer(uint8_t* dst, size_t len) const {
+    if (!dst || len == 0) return;
+    size_t n = (len > DMX_PACKET_SIZE_FULL) ? DMX_PACKET_SIZE_FULL : len;
+    if (xSemaphoreTake(_bufferMutex, pdMS_TO_TICKS(2)) == pdTRUE) {
+        memcpy(dst, _inputBuffer, n);
+        xSemaphoreGive(_bufferMutex);
+    } else {
+        memcpy(dst, _inputBuffer, n);
+    }
+}
+
+void DMXEngine::copyOutputBuffer(uint8_t* dst, size_t len) const {
+    if (!dst || len == 0) return;
+    size_t n = (len > DMX_PACKET_SIZE_FULL) ? DMX_PACKET_SIZE_FULL : len;
+    // _outputBuffer is only ever written from txTask() on Core 1.
+    // A lock-free copy is safe because we always copy the full frame in
+    // one go in mergeBuffers(); the only risk is reading a mid-merge value
+    // which is a single frame at most.
+    memcpy(dst, _outputBuffer, n);
 }

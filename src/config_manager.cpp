@@ -90,6 +90,12 @@ String ConfigManager::toJson() const {
     doc["artnet"]["universe"] = _config.artnetUniverse;
     doc["artnet"]["source"]   = _config.artnetSource;
 
+    // OSC
+    doc["osc"]["enabled"]        = _config.oscEnabled;
+    doc["osc"]["port"]           = _config.oscPort;
+    doc["osc"]["feedbackEnabled"] = _config.oscFeedbackEnabled;
+    doc["osc"]["feedbackPort"]   = _config.oscFeedbackPort;
+
     String output;
     serializeJsonPretty(doc, output);
     return output;
@@ -127,6 +133,12 @@ bool ConfigManager::fromJson(const String& json) {
     _config.artnetTargetIP = doc["artnet"]["targetIP"] | String(ARTNET_DEFAULT_TARGET);
     _config.artnetUniverse = doc["artnet"]["universe"] | (uint16_t)ARTNET_DEFAULT_UNIVERSE;
     _config.artnetSource   = doc["artnet"]["source"]   | (uint8_t)0;
+
+    // OSC
+    _config.oscEnabled        = doc["osc"]["enabled"]        | true;
+    _config.oscPort           = doc["osc"]["port"]           | (uint16_t)OSC_DEFAULT_PORT;
+    _config.oscFeedbackEnabled = doc["osc"]["feedbackEnabled"] | (bool)OSC_DEFAULT_FEEDBACK_ENABLED;
+    _config.oscFeedbackPort   = doc["osc"]["feedbackPort"]   | (uint16_t)OSC_DEFAULT_FEEDBACK_PORT;
 
     return true;
 }

@@ -89,6 +89,8 @@
         .btn-danger { background: var(--red); color: white; }
         .btn-secondary { background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border); }
         .btn-secondary:hover { border-color: var(--accent); }
+        .btn-success { background: var(--green); color: white; }
+        .btn-sm { padding: 4px 10px; font-size: 12px; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
         th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--border); }
@@ -98,9 +100,9 @@
         .dmx-bars { display: flex; gap: 1px; height: 80px; align-items: flex-end; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 8px; margin-bottom: 20px;}
         .dmx-bar { flex: 1; min-width: 1px; background: var(--accent); border-radius: 1px 1px 0 0; opacity: 0.8; transition: 0.1s; }
         
-        /* --- Modal/Learn Mode --- */
+        /* --- Modal --- */
         .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; }
-        .modal { background: var(--bg-card); padding: 24px; border-radius: var(--radius); border: 1px solid var(--border); width: 400px; max-width: 90%; }
+        .modal { background: var(--bg-card); padding: 24px; border-radius: var(--radius); border: 1px solid var(--border); width: 560px; max-width: 95%; max-height: 90vh; overflow-y: auto; }
         .modal h2 { margin-bottom: 16px; }
         .modal p { color: var(--text-secondary); margin-bottom: 20px; font-size: 14px;}
 
@@ -110,6 +112,52 @@
         .toast.error { background: var(--red); }
         .toast.info { background: var(--accent); }
 
+        .manual-fixture-scroll { max-height: 500px; overflow-y: auto; padding-right: 4px; }
+
+        /* --- Macro Modal Specific --- */
+        .macro-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+        .macro-section-title { font-size: 13px; font-weight: 700; color: var(--accent); text-transform: uppercase; margin-bottom: 10px; letter-spacing: 0.5px; }
+
+        /* Channel type checkboxes */
+        .ch-type-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+        .ch-type-item { display: flex; align-items: center; gap: 6px; padding: 6px 8px; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: 0.15s; font-size: 12px; }
+        .ch-type-item:hover { border-color: var(--accent); }
+        .ch-type-item.checked { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+        .ch-type-item input[type="checkbox"] { display: none; }
+        .ch-type-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); flex-shrink: 0; transition: 0.15s; }
+        .ch-type-item.checked .ch-type-dot { background: var(--accent); box-shadow: 0 0 4px var(--accent); }
+
+        /* Color palette */
+        .palette-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+        .palette-swatch { width: 36px; height: 36px; border-radius: 8px; border: 2px solid var(--border); cursor: pointer; transition: 0.15s; position: relative; }
+        .palette-swatch:hover { transform: scale(1.1); border-color: var(--text-secondary); }
+        .palette-swatch.selected { border-color: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
+        .palette-swatch.selected::after { content: '✓'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 16px; color: white; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+
+        /* Custom color picker row */
+        .color-picker-row { display: flex; gap: 10px; align-items: center; margin-top: 8px; }
+        .color-preview { width: 48px; height: 48px; border-radius: 8px; border: 2px solid var(--border); flex-shrink: 0; }
+        .color-sliders { flex: 1; }
+        .color-slider-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-size: 12px; }
+        .color-slider-row label { width: 20px; font-weight: 700; color: var(--text-secondary); }
+        .color-slider-row input[type="range"] { flex: 1; }
+        .color-slider-row span { width: 30px; text-align: right; color: var(--text-muted); }
+
+        /* Blind channel values */
+        .blind-ch-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .blind-ch-item { display: flex; align-items: center; gap: 8px; }
+        .blind-ch-item label { font-size: 12px; color: var(--text-secondary); width: 60px; flex-shrink: 0; }
+        .blind-ch-item input[type="range"] { flex: 1; }
+        .blind-ch-item span { font-size: 11px; color: var(--text-muted); width: 28px; text-align: right; }
+
+        /* Slider styling */
+        input[type="range"] { -webkit-appearance: none; appearance: none; height: 6px; background: var(--bg-primary); border-radius: 3px; outline: none; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--accent); cursor: pointer; }
+
+        /* Macro detail badges */
+        .macro-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; background: var(--bg-primary); color: var(--text-secondary); border: 1px solid var(--border); margin: 1px; }
+        .macro-badge.fade { color: var(--purple); border-color: var(--purple); }
+        .macro-badge.ch { color: var(--orange); border-color: var(--orange); }
     </style>
 </head>
 <body>
@@ -120,6 +168,7 @@
         <span><span class="status-dot" id="dot-dmx"></span>DMX</span>
         <span><span class="status-dot" id="dot-sacn"></span>sACN</span>
         <span><span class="status-dot" id="dot-artnet"></span>ArtNet</span>
+        <span><span class="status-dot" id="dot-osc"></span>OSC</span>
     </div>
 </div>
 
@@ -128,6 +177,7 @@
     <button class="nav-btn" data-page="fixtures">Fixtures & Learn</button>
     <button class="nav-btn" data-page="macros">FX Macros</button>
     <button class="nav-btn" data-page="settings">Settings</button>
+    <button class="nav-btn" data-page="osc">OSC Control</button>
 </div>
 
 <div class="content">
@@ -139,6 +189,7 @@
             <div class="card"><div class="card-label">DMX Output</div><div class="card-value" id="val-tx">-- fps</div></div>
             <div class="card"><div class="card-label">sACN Status</div><div class="card-value" id="val-sacn">--</div></div>
             <div class="card"><div class="card-label">ArtNet Out</div><div class="card-value" id="val-artnet">--</div><div class="card-sub" id="val-artnet-pkts"></div></div>
+            <div class="card"><div class="card-label">OSC Input</div><div class="card-value" id="val-osc">--</div><div class="card-sub" id="val-osc-pkts"></div></div>
         </div>
         <h3>Input Channels 1-128</h3>
         <div class="dmx-bars" id="bars-in"></div>
@@ -148,9 +199,12 @@
 
     <!-- Fixtures -->
     <div id="page-fixtures" class="page">
-        <div style="display:flex; justify-content: space-between; margin-bottom: 20px;">
+        <div style="display:flex; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
             <h3>Fixture Profiles</h3>
-            <button class="btn btn-primary" onclick="startLearnMode()">+ Learn New Fixture</button>
+            <div style="display:flex; gap: 10px;">
+                <button class="btn btn-secondary" onclick="showManualFixtureModal()">+ Manual Add</button>
+                <button class="btn btn-primary" onclick="startLearnMode()">+ Learn New Fixture</button>
+            </div>
         </div>
         <div class="card">
             <table>
@@ -173,13 +227,13 @@
 
     <!-- Macros -->
     <div id="page-macros" class="page">
-        <div style="display:flex; justify-content: space-between; margin-bottom: 20px;">
+        <div style="display:flex; justify-content: space-between; margin-bottom: 20px; align-items:center;">
             <h3>FX Macros</h3>
             <button class="btn btn-primary" onclick="showMacroModal()">+ Add Macro</button>
         </div>
         <div class="card">
             <table>
-                <thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Group/Trigger</th><th>Actions</th></tr></thead>
+                <thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Trigger</th><th>Config</th><th>Actions</th></tr></thead>
                 <tbody id="macro-list"></tbody>
             </table>
         </div>
@@ -259,6 +313,106 @@
     </div>
 </div>
 
+<!-- OSC Control Page -->
+<div id="page-osc" class="page">
+    <div class="card" style="max-width:600px">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <h3 style="margin-bottom:0">OSC Settings</h3>
+            <span id="osc-status-badge" style="font-size:12px; padding:3px 10px; border-radius:20px; background:var(--red); color:white;">OFF</span>
+        </div>
+        <p style="color:var(--text-secondary); font-size:13px; margin-bottom:16px;">
+            Control fixtures via Open Sound Control over WiFi. Compatible with TouchOSC and any OSC client.
+        </p>
+        <div class="form-group">
+            <label>Enable OSC Input</label>
+            <select id="cfg-osc-en"><option value="0">Disabled</option><option value="1">Enabled</option></select>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label>Listen Port</label><input type="number" id="cfg-osc-port" min="1024" max="65535"></div>
+        </div>
+        <h3 style="margin-top:20px;">Feedback (TouchOSC Sync)</h3>
+        <p style="color:var(--text-secondary); font-size:13px; margin-bottom:12px;">
+            Send fader position updates back to TouchOSC so controls reflect the current state.
+        </p>
+        <div class="form-group">
+            <label>Enable Feedback</label>
+            <select id="osc-fb-en"><option value="0">Disabled</option><option value="1">Enabled</option></select>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label>Feedback Port</label><input type="number" id="osc-fb-port" min="1024" max="65535"></div>
+        </div>
+        <div style="display:flex; gap:10px; margin-top:16px;">
+            <button class="btn btn-primary" onclick="saveOscConfig()">Save OSC Settings</button>
+        </div>
+    </div>
+
+    <div class="card" style="max-width:600px; margin-top:20px;">
+        <h3>TouchOSC Setup Guide</h3>
+        <div style="color:var(--text-secondary); font-size:13px; line-height:1.8;">
+            <p><b>1.</b> Open TouchOSC on your device and tap the <b>▶ Play</b> button to enter control mode.</p>
+            <p><b>2.</b> Go to <b>Settings → Connections → OSC</b> and add a new connection:</p>
+            <ul style="margin: 8px 0 8px 20px; padding:0;">
+                <li><b>Host:</b> <span id="osc-host-ip" style="color:var(--accent); font-family:monospace;">(loading...)</span></li>
+                <li><b>Send Port:</b> <span id="osc-send-port" style="font-family:monospace;">8000</span></li>
+                <li><b>Receive Port:</b> <span id="osc-recv-port" style="font-family:monospace;">9000</span></li>
+            </ul>
+            <p><b>3.</b> In the TouchOSC Editor, add faders/buttons with these OSC addresses:</p>
+            <table style="width:100%; border-collapse:collapse; margin:8px 0; font-size:12px;">
+                <thead><tr style="border-bottom:1px solid var(--border);"><th style="text-align:left; padding:4px;">Address Pattern</th><th style="text-align:left; padding:4px;">Type</th><th style="text-align:left; padding:4px;">Description</th></tr></thead>
+                <tbody>
+                    <tr style="border-bottom:1px solid var(--border);"><td style="padding:4px; font-family:monospace; color:var(--accent);">/dmxinterceptor/fixture/<i>{id}</i>/red</td><td style="padding:4px;">Fader 0-255</td><td style="padding:4px;">Fixture red</td></tr>
+                    <tr style="border-bottom:1px solid var(--border);"><td style="padding:4px; font-family:monospace; color:var(--accent);">/dmxinterceptor/fixture/<i>{id}</i>/green</td><td style="padding:4px;">Fader 0-255</td><td style="padding:4px;">Fixture green</td></tr>
+                    <tr style="border-bottom:1px solid var(--border);"><td style="padding:4px; font-family:monospace; color:var(--accent);">/dmxinterceptor/fixture/<i>{id}</i>/blue</td><td style="padding:4px;">Fader 0-255</td><td style="padding:4px;">Fixture blue</td></tr>
+                    <tr style="border-bottom:1px solid var(--border);"><td style="padding:4px; font-family:monospace; color:var(--accent);">/dmxinterceptor/fixture/<i>{id}</i>/dimmer</td><td style="padding:4px;">Fader 0-255</td><td style="padding:4px;">Fixture dimmer</td></tr>
+                    <tr style="border-bottom:1px solid var(--border);"><td style="padding:4px; font-family:monospace; color:var(--accent);">/dmxinterceptor/group/<i>{id}</i>/red</td><td style="padding:4px;">Fader 0-255</td><td style="padding:4px;">Group red</td></tr>
+                    <tr style="border-bottom:1px solid var(--border);"><td style="padding:4px; font-family:monospace; color:var(--accent);">/dmxinterceptor/macro/<i>{id}</i>/trigger</td><td style="padding:4px;">Button</td><td style="padding:4px;">Trigger macro</td></tr>
+                    <tr style="border-bottom:1px solid var(--border);"><td style="padding:4px; font-family:monospace; color:var(--accent);">/dmxinterceptor/blackout</td><td style="padding:4px;">Toggle</td><td style="padding:4px;">Master blackout</td></tr>
+                    <tr><td style="padding:4px; font-family:monospace; color:var(--accent);">/dmxinterceptor/master</td><td style="padding:4px;">Fader 0-255</td><td style="padding:4px;">Master dimmer</td></tr>
+                </tbody>
+            </table>
+            <p style="margin-top:8px;"><b>Fixture IDs:</b> See the <b>Fixtures</b> tab for the ID of each configured fixture.</p>
+        </div>
+    </div>
+
+    <div class="card" style="max-width:600px; margin-top:20px;">
+        <h3>OSC Activity Log</h3>
+        <div id="osc-activity-log" style="font-family:monospace; font-size:11px; color:var(--text-secondary); max-height:120px; overflow-y:auto; background:var(--bg-primary); padding:10px; border-radius:4px; min-height:60px;">
+            <em>No OSC messages received yet...</em>
+        </div>
+    </div>
+</div>
+
+<!-- Manual Add Fixture Modal -->
+<div class="modal-overlay" id="manual-fixture-modal">
+    <div class="modal" style="width:500px; max-width:95%;">
+        <h2 id="mfm-title">Add Fixture Manually</h2>
+        <div style="margin-bottom: 12px; display:flex; gap:10px;">
+            <div style="flex:2">
+                <div class="form-group"><label>Name</label><input type="text" id="mfm-name" value="New Fixture"></div>
+            </div>
+            <div style="flex:1">
+                <div class="form-group"><label>Group ID</label><input type="number" id="mfm-group" value="0" min="0" max="8"></div>
+            </div>
+        </div>
+        <div style="margin-bottom: 12px; display:flex; gap:10px;">
+            <div style="flex:1">
+                <div class="form-group"><label>Start Channel</label><input type="number" id="mfm-start" value="1" min="1" max="512"></div>
+            </div>
+            <div style="flex:1">
+                <div class="form-group"><label>Channel Count</label><input type="number" id="mfm-count" value="1" min="1" max="32" onchange="buildChannelRows()"></div>
+            </div>
+            <div style="flex:1">
+                <div class="form-group"><label>Quantity</label><input type="number" id="mfm-qty" value="1" min="1" max="32"></div>
+            </div>
+        </div>
+        <div id="mfm-channels" class="manual-fixture-scroll"></div>
+        <div style="display:flex; gap: 10px; justify-content: flex-end; margin-top: 15px;">
+            <button class="btn btn-secondary" onclick="document.getElementById('manual-fixture-modal').style.display='none'">Cancel</button>
+            <button class="btn btn-primary" onclick="saveManualFixture()">Save Fixture</button>
+        </div>
+    </div>
+</div>
+
 <!-- Learn Modal -->
 <div class="modal-overlay" id="learn-modal">
     <div class="modal">
@@ -269,32 +423,30 @@
             <button class="btn btn-primary" id="lm-btn-main" onclick="learnNext()">Start Scan</button>
         </div>
         
-        <!-- Save Form inside Learn Modal -->
         <div id="lm-save-form" style="display:none; margin-top:15px;">
             <div class="form-group"><label>Name</label><input type="text" id="lf-name" value="New Fixture"></div>
             <div class="form-group"><label>Group ID (0=None)</label><input type="number" id="lf-group" value="0"></div>
             <div class="form-row">
                 <div class="form-group"><label>Total Channels</label><input type="number" id="lf-count" value="4"></div>
-                <div class="form-group"><label>Dimmer Offset</label><input type="number" id="lf-dim" value="0"></div>
+                <div class="form-group"><label>Start Channel</label><input type="number" id="lf-start" value="1" min="1" max="512"></div>
             </div>
-            <div class="form-row">
-                <div class="form-group"><label>Red Offset</label><input type="number" id="lf-r" value="1"></div>
-                <div class="form-group"><label>Green Offset</label><input type="number" id="lf-g" value="2"></div>
-                <div class="form-group"><label>Blue Offset</label><input type="number" id="lf-b" value="3"></div>
-            </div>
-            <button class="btn btn-primary" style="width:100%" onclick="learnSave()">Save Profile</button>
+            <div id="lf-channel-grid" class="manual-fixture-scroll" style="margin-top:10px;"></div>
+            <button class="btn btn-primary" style="width:100%; margin-top:10px;" onclick="learnSave()">Save Profile</button>
         </div>
     </div>
 </div>
 
 <!-- Macro Modal -->
 <div class="modal-overlay" id="macro-modal">
-    <div class="modal">
-        <h2>FX Macro Config</h2>
-        <div class="form-group"><label>Name</label><input type="text" id="mac-name"></div>
+    <div class="modal" style="width:560px;">
+        <h2 id="macro-modal-title">Add FX Macro</h2>
+        <input type="hidden" id="mac-id" value="0">
+
+        <!-- Basic fields -->
+        <div class="form-group"><label>Name</label><input type="text" id="mac-name" placeholder="My Macro"></div>
         <div class="form-row">
             <div class="form-group"><label>Type</label>
-                <select id="mac-type">
+                <select id="mac-type" onchange="macroTypeChanged()">
                     <option value="1">Blackout</option>
                     <option value="2">Blind</option>
                     <option value="3">Strobe</option>
@@ -305,12 +457,77 @@
                     <option value="8">Pulse</option>
                 </select>
             </div>
-            <div class="form-group"><label>Target Group ID</label><input type="number" id="mac-group" value="0"></div>
+            <div class="form-group"><label>Target Group ID</label><input type="number" id="mac-group" value="0" min="0" max="8"></div>
         </div>
         <div class="form-row">
-            <div class="form-group"><label>sACN Trigger Ch</label><input type="number" id="mac-trig" value="1"></div>
-            <div class="form-group"><label>Speed (ms)</label><input type="number" id="mac-speed" value="100"></div>
+            <div class="form-group"><label>sACN Trigger Ch</label><input type="number" id="mac-trig" value="0" min="0" max="512" placeholder="0=manual"></div>
+            <div class="form-group"><label>Trigger Threshold</label><input type="number" id="mac-threshold" value="128" min="1" max="255"></div>
         </div>
+
+        <!-- Common FX params -->
+        <div class="form-row">
+            <div class="form-group"><label>Intensity (0-255)</label><input type="number" id="mac-intensity" value="255" min="0" max="255"></div>
+            <div class="form-group"><label>Speed (ms)</label><input type="number" id="mac-speed" value="100" min="1"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label>Fade (ms, 0=snap)</label><input type="number" id="mac-fade" value="0" min="0"></div>
+            <div class="form-group" id="mac-duration-wrap"><label>Duration (ms, smoke)</label><input type="number" id="mac-duration" value="3000" min="100"></div>
+        </div>
+
+        <!-- Channel Type Mask -->
+        <div class="macro-section">
+            <div class="macro-section-title">Affected Channel Types</div>
+            <div class="ch-type-grid" id="ch-type-grid">
+                <label class="ch-type-item checked" data-bit="0"><input type="checkbox" id="ch-dim" checked><span class="ch-type-dot"></span>Dimmer</label>
+                <label class="ch-type-item checked" data-bit="1"><input type="checkbox" id="ch-r" checked><span class="ch-type-dot"></span>Red</label>
+                <label class="ch-type-item checked" data-bit="2"><input type="checkbox" id="ch-g" checked><span class="ch-type-dot"></span>Green</label>
+                <label class="ch-type-item checked" data-bit="3"><input type="checkbox" id="ch-b" checked><span class="ch-type-dot"></span>Blue</label>
+                <label class="ch-type-item checked" data-bit="4"><input type="checkbox" id="ch-w" checked><span class="ch-type-dot"></span>White</label>
+                <label class="ch-type-item checked" data-bit="5"><input type="checkbox" id="ch-ww" checked><span class="ch-type-dot"></span>Warm White</label>
+                <label class="ch-type-item checked" data-bit="6"><input type="checkbox" id="ch-cw" checked><span class="ch-type-dot"></span>Cool White</label>
+                <label class="ch-type-item checked" data-bit="7"><input type="checkbox" id="ch-amber" checked><span class="ch-type-dot"></span>Amber</label>
+                <label class="ch-type-item checked" data-bit="8"><input type="checkbox" id="ch-uv" checked><span class="ch-type-dot"></span>UV</label>
+                <label class="ch-type-item checked" data-bit="9"><input type="checkbox" id="ch-strobe" checked><span class="ch-type-dot"></span>Strobe</label>
+            </div>
+            <div style="margin-top:6px; display:flex; gap:8px;">
+                <button class="btn btn-sm btn-secondary" onclick="toggleChTypes(true)">All</button>
+                <button class="btn btn-sm btn-secondary" onclick="toggleChTypes(false)">None</button>
+                <button class="btn btn-sm btn-secondary" onclick="toggleChColor()">Color Only</button>
+                <button class="btn btn-sm btn-secondary" onclick="toggleChDimmer()">Dimmer Only</button>
+            </div>
+        </div>
+
+        <!-- Color section (for Color type) -->
+        <div class="macro-section" id="mac-section-color">
+            <div class="macro-section-title">Color</div>
+            <div class="palette-grid" id="palette-grid"></div>
+            <div class="color-picker-row">
+                <div class="color-preview" id="color-preview"></div>
+                <div class="color-sliders">
+                    <div class="color-slider-row"><label>R</label><input type="range" id="mac-r" min="0" max="255" value="255" oninput="updateColorPreview()"><span id="mac-r-val">255</span></div>
+                    <div class="color-slider-row"><label>G</label><input type="range" id="mac-g" min="0" max="255" value="255" oninput="updateColorPreview()"><span id="mac-g-val">255</span></div>
+                    <div class="color-slider-row"><label>B</label><input type="range" id="mac-b" min="0" max="255" value="255" oninput="updateColorPreview()"><span id="mac-b-val">255</span></div>
+                </div>
+            </div>
+            <input type="hidden" id="mac-palette" value="255">
+        </div>
+
+        <!-- Blind section (for Blind type) -->
+        <div class="macro-section" id="mac-section-blind" style="display:none;">
+            <div class="macro-section-title">Blind Channel Values</div>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">Set the value each color channel will be forced to when the blind is active. 0 = channel off, 255 = full.</p>
+            <div class="blind-ch-grid">
+                <div class="blind-ch-item"><label>Red</label><input type="range" id="blind-r" min="0" max="255" value="255" oninput="document.getElementById('blind-r-val').textContent=this.value"><span id="blind-r-val">255</span></div>
+                <div class="blind-ch-item"><label>Green</label><input type="range" id="blind-g" min="0" max="255" value="255" oninput="document.getElementById('blind-g-val').textContent=this.value"><span id="blind-g-val">255</span></div>
+                <div class="blind-ch-item"><label>Blue</label><input type="range" id="blind-b" min="0" max="255" value="255" oninput="document.getElementById('blind-b-val').textContent=this.value"><span id="blind-b-val">255</span></div>
+                <div class="blind-ch-item"><label>White</label><input type="range" id="blind-w" min="0" max="255" value="0" oninput="document.getElementById('blind-w-val').textContent=this.value"><span id="blind-w-val">0</span></div>
+                <div class="blind-ch-item"><label>Warm W</label><input type="range" id="blind-ww" min="0" max="255" value="0" oninput="document.getElementById('blind-ww-val').textContent=this.value"><span id="blind-ww-val">0</span></div>
+                <div class="blind-ch-item"><label>Cool W</label><input type="range" id="blind-cw" min="0" max="255" value="0" oninput="document.getElementById('blind-cw-val').textContent=this.value"><span id="blind-cw-val">0</span></div>
+                <div class="blind-ch-item"><label>Amber</label><input type="range" id="blind-amber" min="0" max="255" value="0" oninput="document.getElementById('blind-amber-val').textContent=this.value"><span id="blind-amber-val">0</span></div>
+                <div class="blind-ch-item"><label>UV</label><input type="range" id="blind-uv" min="0" max="255" value="0" oninput="document.getElementById('blind-uv-val').textContent=this.value"><span id="blind-uv-val">0</span></div>
+            </div>
+        </div>
+
         <div style="display:flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
             <button class="btn btn-secondary" onclick="document.getElementById('macro-modal').style.display='none'">Cancel</button>
             <button class="btn btn-primary" onclick="saveMacro()">Save Macro</button>
@@ -351,7 +568,6 @@ setInterval(async () => {
         document.getElementById('val-sacn').textContent = d.sacn.active ? 'Active' : 'Idle';
         document.getElementById('dot-dmx').className = 'status-dot ' + (d.dmx.inputActive ? 'active' : 'inactive');
         document.getElementById('dot-sacn').className = 'status-dot ' + (d.sacn.active ? 'active' : 'inactive');
-        // ArtNet status
         const artOn = d.artnet && d.artnet.enabled;
         document.getElementById('dot-artnet').className = 'status-dot ' + (artOn ? 'active' : 'inactive');
         document.getElementById('val-artnet').textContent = artOn ? 'Active' : 'Off';
@@ -395,7 +611,6 @@ async function loadConfig() {
         document.getElementById('cfg-merge').value = c.merge.mode;
         document.getElementById('cfg-smoke-ch').value = c.smoke.dmxChannel;
         document.getElementById('cfg-smoke-burst').value = c.smoke.burstMs;
-        // ArtNet
         if (c.artnet) {
             document.getElementById('cfg-artnet-en').value = c.artnet.enabled ? '1' : '0';
             document.getElementById('cfg-artnet-ip').value = c.artnet.targetIP || '255.255.255.255';
@@ -459,7 +674,6 @@ async function loadWiFiStatus() {
                 badge.style.background = 'var(--red)';
                 modeText.textContent = 'Disconnected';
             }
-            // Fill input fields
             document.getElementById('cfg-wifi-ssid').value = d.wifi.ssid || '';
         }
     } catch(e) {}
@@ -519,12 +733,23 @@ async function clearWiFi() {
 async function fetchFixtures() {
     const res = await fetch('/api/fixtures');
     const data = await res.json();
-    
+
     const flist = document.getElementById('fixture-list');
     flist.innerHTML = '';
     data.fixtures.forEach(f => {
+        let details = [];
+        const addDetail = (label, val) => { if(val != null && val !== 255) details.push(`${label}: ${val}`); };
+        addDetail('Dim', f.dimmer); addDetail('R', f.red); addDetail('G', f.green); addDetail('B', f.blue);
+        addDetail('W', f.white); addDetail('WW', f.warmWhite); addDetail('CW', f.coolWhite);
+        addDetail('Amb', f.amber); addDetail('UV', f.uv); addDetail('Strb', f.strobe);
+        addDetail('Pan', f.pan); addDetail('Tilt', f.tilt); addDetail('Focus', f.focus);
+        addDetail('Prism', f.prism); addDetail('FX', f.effect); addDetail('Gobo', f.gobo);
+        addDetail('Spd', f.speed); addDetail('Smoke', f.smoke); addDetail('Fan', f.fan);
+
+        const detailHtml = details.length ? `<div style="font-size:11px; color:var(--text-muted); margin-top:2px;">${details.join(', ')}</div>` : '';
+
         flist.innerHTML += `<tr>
-            <td>${f.id}</td><td>${f.name}</td><td>${f.start}</td><td>${f.count}</td><td>${f.group}</td>
+            <td>${f.id}</td><td>${f.name}${detailHtml}</td><td>${f.start}</td><td>${f.count}</td><td>${f.group}</td>
             <td><button class="btn btn-danger" onclick="delFixture(${f.id})">Del</button></td>
         </tr>`;
     });
@@ -548,6 +773,106 @@ async function addGroup() {
     fetchFixtures();
 }
 
+// --- Manual Fixture Add ---
+const CHANNEL_TYPES = [
+    {k:'none', l:'-- None --'},
+    {k:'dimmer', l:'Dimmer'},
+    {k:'red', l:'R (Red)'},
+    {k:'green', l:'G (Green)'},
+    {k:'blue', l:'B (Blue)'},
+    {k:'white', l:'W (White)'},
+    {k:'warmWhite', l:'WW (Warm White / CC)'},
+    {k:'coolWhite', l:'CW (Cool White)'},
+    {k:'amber', l:'Amber'},
+    {k:'uv', l:'UV'},
+    {k:'strobe', l:'Strobe'},
+    {k:'pan', l:'Pan'},
+    {k:'tilt', l:'Tilt'},
+    {k:'focus', l:'Focus'},
+    {k:'prism', l:'Prism'},
+    {k:'effect', l:'FX / Effect'},
+    {k:'gobo', l:'Gobo'},
+    {k:'speed', l:'Speed'},
+    {k:'smoke', l:'Smoke'},
+    {k:'fan', l:'Fan'},
+    {k:'other', l:'Other'},
+];
+
+function buildSelectOptions(selected='none') {
+    return CHANNEL_TYPES.map(t => `<option value="${t.k}" ${t.k===selected?'selected':''}>${t.l}</option>`).join('');
+}
+
+function buildChannelRows(containerId='mfm-channels', countInputId='mfm-count') {
+    const count = parseInt(document.getElementById(countInputId).value) || 1;
+    const container = document.getElementById(containerId);
+    let html = '';
+    for(let i=0; i<count; i++) {
+        html += `<div class="form-row" style="gap:6px; margin-bottom:6px; align-items:center;">
+            <label style="width:70px; font-size:12px; color:var(--text-secondary);">Ch ${i}</label>
+            <select class="mfm-ch-type" data-idx="${i}" style="flex:1; padding:6px; background:var(--bg-primary); border:1px solid var(--border); border-radius:4px; color:var(--text-primary);">
+                ${buildSelectOptions('none')}
+            </select>
+        </div>`;
+    }
+    container.innerHTML = html;
+}
+
+function getChannelTypeData(prefix='mfm') {
+    const payload = {};
+    const modalId = prefix === 'mfm' ? 'manual-fixture-modal' : 'learn-modal';
+    document.querySelectorAll(`#${modalId} select[data-idx]`).forEach(sel => {
+        const type = sel.value;
+        if(type === 'none') return;
+        const idx = parseInt(sel.dataset.idx);
+        const keyMap = {
+            dimmer:'dimmer', red:'red', green:'green', blue:'blue',
+            white:'white', warmWhite:'warmWhite', coolWhite:'coolWhite',
+            amber:'amber', uv:'uv', strobe:'strobe',
+            pan:'pan', tilt:'tilt', focus:'focus', prism:'prism',
+            effect:'effect', gobo:'gobo', speed:'speed',
+            smoke:'smoke', fan:'fan', other:null
+        };
+        const apiKey = keyMap[type];
+        if(apiKey) payload[apiKey] = idx;
+    });
+    return payload;
+}
+
+function showManualFixtureModal() {
+    document.getElementById('manual-fixture-modal').style.display = 'flex';
+    buildChannelRows();
+}
+
+async function saveManualFixture() {
+    const baseName = document.getElementById('mfm-name').value || 'Manual Fixture';
+    const group = parseInt(document.getElementById('mfm-group').value) || 0;
+    const startCh = parseInt(document.getElementById('mfm-start').value) || 1;
+    const count = parseInt(document.getElementById('mfm-count').value) || 1;
+    const qty = parseInt(document.getElementById('mfm-qty').value) || 1;
+    const channels = getChannelTypeData('mfm');
+
+    const fixtures = [];
+    for (let i = 0; i < qty; i++) {
+        const name = qty > 1 ? `${baseName} ${i + 1}` : baseName;
+        fixtures.push({
+            name: name,
+            group: group,
+            start: startCh + (i * count),
+            count: count,
+            ...channels
+        });
+    }
+
+    const payload = qty > 1 ? fixtures : fixtures[0];
+
+    try {
+        await fetch('/api/fixtures', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+        document.getElementById('manual-fixture-modal').style.display = 'none';
+        toast(qty > 1 ? `${qty} fixtures saved` : 'Fixture saved', 'success');
+        fetchFixtures();
+    } catch(e) { toast('Error saving fixture', 'error'); }
+}
+
 // Learn Mode State Machine
 let learnCh = 1;
 async function startLearnMode() {
@@ -569,18 +894,19 @@ async function learnNext() {
     learnCh = d.channel;
     document.getElementById('lm-text').innerHTML = `Currently lighting up <b>Channel ${learnCh-1}</b>.<br><br>Did your fixture turn on?`;
     document.getElementById('lm-btn-main').textContent = "No, Next Channel";
-    
-    // Add a "Yes" button
+
     if(!document.getElementById('lm-btn-yes')) {
         let btn = document.createElement('button');
-        btn.id = 'lm-btn-yes'; btn.className = 'btn btn-success'; btn.style.background = 'var(--green)'; btn.style.color = 'white';
+        btn.id = 'lm-btn-yes'; btn.className = 'btn btn-success';
         btn.textContent = "Yes, Light is ON!";
         btn.onclick = learnFound;
         document.getElementById('lm-actions').prepend(btn);
     }
 }
 async function learnFound() {
-    await fetch('/api/learn/found', {method:'POST'});
+    const r = await fetch('/api/learn/found', {method:'POST'});
+    const d = await r.json();
+    document.getElementById('lf-start').value = d.startChannel;
     document.getElementById('lm-title').textContent = "Step 2: Probing RGB";
     document.getElementById('lm-text').textContent = "Now we'll probe channels automatically to guess RGB offsets. Watch the fixture.";
     document.getElementById('lm-btn-main').textContent = "Start Probe";
@@ -590,21 +916,26 @@ async function learnFound() {
 async function learnProbe() {
     const r = await fetch('/api/learn/probe', {method:'POST'});
     const d = await r.json();
-    if(d.state === 6) { // LEARN_CONFIRM
+    if(d.state === 6) {
         document.getElementById('lm-title').textContent = "Step 3: Save Profile";
         document.getElementById('lm-text').textContent = "Probing finished. Verify settings below and save.";
         document.getElementById('lm-actions').style.display = 'none';
         document.getElementById('lm-save-form').style.display = 'block';
+        buildChannelRows('lf-channel-grid', 'lf-count');
     } else {
         document.getElementById('lm-text').textContent = "Probing... click Next Step repeatedly until finished.";
     }
 }
 async function learnSave() {
-    const payload = {
-        name: document.getElementById('lf-name').value, group: parseInt(document.getElementById('lf-group').value),
-        count: parseInt(document.getElementById('lf-count').value), dimmer: parseInt(document.getElementById('lf-dim').value),
-        red: parseInt(document.getElementById('lf-r').value), green: parseInt(document.getElementById('lf-g').value), blue: parseInt(document.getElementById('lf-b').value)
+    const base = {
+        name: document.getElementById('lf-name').value,
+        group: parseInt(document.getElementById('lf-group').value) || 0,
+        start: parseInt(document.getElementById('lf-start').value) || 1,
+        count: parseInt(document.getElementById('lf-count').value) || 1,
     };
+    const channels = getChannelTypeData('lf');
+    const payload = {...base, ...channels};
+
     await fetch('/api/learn/confirm', {method:'POST', body: JSON.stringify(payload)});
     document.getElementById('learn-modal').style.display = 'none';
     document.getElementById('lm-actions').style.display = 'flex';
@@ -612,38 +943,415 @@ async function learnSave() {
     fetchFixtures();
 }
 
-// Macros
+// ============================================================================
+// MACROS
+// ============================================================================
+
+const FX_TYPES = ["None","Blackout","Blind","Strobe","Rnd Strobe","Color","Smoke","Chase","Pulse"];
+const CH_LABELS = ['Dimmer','Red','Green','Blue','White','Warm W','Cool W','Amber','UV','Strobe'];
+const CH_BITS = [0,1,2,3,4,5,6,7,8,9];
+
+let colorPalette = [];
+
+// Load palette on startup
+(async () => {
+    try {
+        const r = await fetch('/api/palette');
+        const d = await r.json();
+        colorPalette = d.palette || [];
+    } catch(e) {
+        // Fallback palette
+        colorPalette = [
+            {r:255,g:0,b:0,name:"Red"},{r:255,g:128,b:0,name:"Orange"},
+            {r:255,g:255,b:0,name:"Yellow"},{r:0,g:255,b:0,name:"Green"},
+            {r:0,g:255,b:255,name:"Cyan"},{r:0,g:0,b:255,name:"Blue"},
+            {r:128,g:0,b:255,name:"Purple"},{r:255,g:255,b:255,name:"White"},
+        ];
+    }
+})();
+
+// Channel type checkbox handling
+document.getElementById('ch-type-grid').addEventListener('click', function(e) {
+    const item = e.target.closest('.ch-type-item');
+    if (!item) return;
+    const cb = item.querySelector('input[type="checkbox"]');
+    cb.checked = !cb.checked;
+    item.classList.toggle('checked', cb.checked);
+});
+
+function toggleChTypes(on) {
+    document.querySelectorAll('#ch-type-grid .ch-type-item').forEach(item => {
+        const cb = item.querySelector('input[type="checkbox"]');
+        cb.checked = on;
+        item.classList.toggle('checked', on);
+    });
+}
+
+function toggleChColor() {
+    const colorBits = [1,2,3,4,5,6,7,8];
+    document.querySelectorAll('#ch-type-grid .ch-type-item').forEach(item => {
+        const bit = parseInt(item.dataset.bit);
+        const cb = item.querySelector('input[type="checkbox"]');
+        cb.checked = colorBits.includes(bit);
+        item.classList.toggle('checked', cb.checked);
+    });
+}
+
+function toggleChDimmer() {
+    document.querySelectorAll('#ch-type-grid .ch-type-item').forEach(item => {
+        const bit = parseInt(item.dataset.bit);
+        const cb = item.querySelector('input[type="checkbox"]');
+        cb.checked = (bit === 0);
+        item.classList.toggle('checked', cb.checked);
+    });
+}
+
+function getChannelMask() {
+    let mask = 0;
+    document.querySelectorAll('#ch-type-grid .ch-type-item').forEach(item => {
+        const cb = item.querySelector('input[type="checkbox"]');
+        if (cb.checked) mask |= (1 << parseInt(item.dataset.bit));
+    });
+    return mask;
+}
+
+function setChannelMask(mask) {
+    document.querySelectorAll('#ch-type-grid .ch-type-item').forEach(item => {
+        const bit = parseInt(item.dataset.bit);
+        const cb = item.querySelector('input[type="checkbox"]');
+        cb.checked = !!(mask & (1 << bit));
+        item.classList.toggle('checked', cb.checked);
+    });
+}
+
+// Palette rendering
+function renderPalette(selectedIdx) {
+    const grid = document.getElementById('palette-grid');
+    grid.innerHTML = '';
+    colorPalette.forEach((c, i) => {
+        const swatch = document.createElement('div');
+        swatch.className = 'palette-swatch' + (i === selectedIdx ? ' selected' : '');
+        swatch.style.background = `rgb(${c.r},${c.g},${c.b})`;
+        swatch.title = c.name || `Color ${i}`;
+        swatch.onclick = () => selectPalette(i);
+        grid.appendChild(swatch);
+    });
+    // "Custom" swatch
+    const custom = document.createElement('div');
+    custom.className = 'palette-swatch' + (selectedIdx === 255 ? ' selected' : '');
+    custom.style.background = 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)';
+    custom.title = 'Custom';
+    custom.onclick = () => selectPalette(255);
+    grid.appendChild(custom);
+}
+
+function selectPalette(idx) {
+    document.getElementById('mac-palette').value = idx;
+    renderPalette(idx);
+    if (idx === 255) {
+        // Custom: enable sliders
+    } else if (idx < colorPalette.length) {
+        const c = colorPalette[idx];
+        document.getElementById('mac-r').value = c.r;
+        document.getElementById('mac-g').value = c.g;
+        document.getElementById('mac-b').value = c.b;
+        document.getElementById('mac-r-val').textContent = c.r;
+        document.getElementById('mac-g-val').textContent = c.g;
+        document.getElementById('mac-b-val').textContent = c.b;
+        updateColorPreview();
+    }
+}
+
+function updateColorPreview() {
+    const r = document.getElementById('mac-r').value;
+    const g = document.getElementById('mac-g').value;
+    const b = document.getElementById('mac-b').value;
+    document.getElementById('color-preview').style.background = `rgb(${r},${g},${b})`;
+    document.getElementById('mac-r-val').textContent = r;
+    document.getElementById('mac-g-val').textContent = g;
+    document.getElementById('mac-b-val').textContent = b;
+    // If user moves sliders, switch to custom
+    document.getElementById('mac-palette').value = 255;
+    renderPalette(255);
+}
+
+// Show/hide sections based on macro type
+function macroTypeChanged() {
+    const type = parseInt(document.getElementById('mac-type').value);
+    const showColor = (type === 5);  // FX_COLOR
+    const showBlind = (type === 2);  // FX_BLIND
+    const showDuration = (type === 6); // FX_SMOKE
+    const showSpeed = (type === 3 || type === 4 || type === 7 || type === 8); // Strobe, Rnd Strobe, Chase, Pulse
+    const showFade = (type !== 1 && type !== 6); // Not blackout, not smoke
+
+    document.getElementById('mac-section-color').style.display = showColor ? 'block' : 'none';
+    document.getElementById('mac-section-blind').style.display = showBlind ? 'block' : 'none';
+    document.getElementById('mac-duration-wrap').style.display = showDuration ? 'block' : 'none';
+}
+
+// Build macro list table
 async function fetchMacros() {
     const res = await fetch('/api/macros'); const data = await res.json();
     const list = document.getElementById('macro-list');
     list.innerHTML = '';
-    const types = ["None","Blackout","Blind","Strobe","Rnd Strobe","Color","Smoke","Chase","Pulse"];
     data.macros.forEach(m => {
+        // Build config badges
+        let badges = [];
+        if (m.triggerCh) badges.push(`<span class="macro-badge">Ch${m.triggerCh}</span>`);
+        if (m.fade) badges.push(`<span class="macro-badge fade">Fade ${m.fade}ms</span>`);
+        // Show affected channels
+        const chNames = [];
+        if (m.chMask & (1<<0)) chNames.push('Dim');
+        if (m.chMask & (1<<1)) chNames.push('R');
+        if (m.chMask & (1<<2)) chNames.push('G');
+        if (m.chMask & (1<<3)) chNames.push('B');
+        if (m.chMask & (1<<4)) chNames.push('W');
+        if (m.chMask & (1<<5)) chNames.push('WW');
+        if (m.chMask & (1<<6)) chNames.push('CW');
+        if (m.chMask & (1<<7)) chNames.push('Am');
+        if (m.chMask & (1<<8)) chNames.push('UV');
+        if (m.chMask & (1<<9)) chNames.push('Str');
+        if (chNames.length) badges.push(`<span class="macro-badge ch">${chNames.join(',')}</span>`);
+        if (m.type === 5 && m.palette !== 255 && m.palette < 8) badges.push(`<span class="macro-badge">Palette ${m.palette}</span>`);
+
         list.innerHTML += `<tr>
-            <td>${m.id}</td><td>${m.name}</td><td>${types[m.type]}</td><td>Grp ${m.group} / Trig Ch ${m.triggerCh}</td>
+            <td>${m.id}</td>
+            <td>${m.name}</td>
+            <td>${FX_TYPES[m.type] || '?'}</td>
+            <td>${m.triggerCh ? 'Ch'+m.triggerCh : 'Manual'}</td>
+            <td>${badges.join(' ')}</td>
             <td>
-                <button class="btn btn-secondary" onclick="triggerMacro(${m.id})">▶</button>
-                <button class="btn btn-secondary" onclick="stopMacro(${m.id})">⏹</button>
-                <button class="btn btn-danger" onclick="delMacro(${m.id})">Del</button>
+                <button class="btn btn-sm btn-secondary" onclick="triggerMacro(${m.id})">▶</button>
+                <button class="btn btn-sm btn-secondary" onclick="stopMacro(${m.id})">⏹</button>
+                <button class="btn btn-sm btn-secondary" onclick="editMacro(${m.id})">✎</button>
+                <button class="btn btn-sm btn-danger" onclick="delMacro(${m.id})">Del</button>
             </td>
         </tr>`;
     });
 }
-function showMacroModal() { document.getElementById('macro-modal').style.display = 'flex'; }
+
+function showMacroModal(editId) {
+    document.getElementById('macro-modal').style.display = 'flex';
+    document.getElementById('macro-modal-title').textContent = editId ? 'Edit FX Macro' : 'Add FX Macro';
+    document.getElementById('mac-id').value = editId || 0;
+
+    // Reset defaults
+    document.getElementById('mac-name').value = '';
+    document.getElementById('mac-type').value = '1';
+    document.getElementById('mac-group').value = '0';
+    document.getElementById('mac-trig').value = '0';
+    document.getElementById('mac-threshold').value = '128';
+    document.getElementById('mac-intensity').value = '255';
+    document.getElementById('mac-speed').value = '100';
+    document.getElementById('mac-fade').value = '0';
+    document.getElementById('mac-duration').value = '3000';
+    document.getElementById('mac-r').value = '255';
+    document.getElementById('mac-g').value = '255';
+    document.getElementById('mac-b').value = '255';
+    document.getElementById('mac-r-val').textContent = '255';
+    document.getElementById('mac-g-val').textContent = '255';
+    document.getElementById('mac-b-val').textContent = '255';
+    document.getElementById('mac-palette').value = '0';
+
+    // Blind defaults
+    document.getElementById('blind-r').value = 255; document.getElementById('blind-r-val').textContent = 255;
+    document.getElementById('blind-g').value = 255; document.getElementById('blind-g-val').textContent = 255;
+    document.getElementById('blind-b').value = 255; document.getElementById('blind-b-val').textContent = 255;
+    document.getElementById('blind-w').value = 0; document.getElementById('blind-w-val').textContent = 0;
+    document.getElementById('blind-ww').value = 0; document.getElementById('blind-ww-val').textContent = 0;
+    document.getElementById('blind-cw').value = 0; document.getElementById('blind-cw-val').textContent = 0;
+    document.getElementById('blind-amber').value = 0; document.getElementById('blind-amber-val').textContent = 0;
+    document.getElementById('blind-uv').value = 0; document.getElementById('blind-uv-val').textContent = 0;
+
+    setChannelMask(1023); // CH_ALL
+    renderPalette(0);
+    updateColorPreview();
+    macroTypeChanged();
+
+    // If editing, load existing values
+    if (editId) {
+        loadMacroForEdit(editId);
+    }
+}
+
+async function loadMacroForEdit(id) {
+    const res = await fetch('/api/macros');
+    const data = await res.json();
+    const m = data.macros.find(x => x.id === id);
+    if (!m) return;
+
+    document.getElementById('mac-name').value = m.name || '';
+    document.getElementById('mac-type').value = m.type || 1;
+    document.getElementById('mac-group').value = m.group || 0;
+    document.getElementById('mac-trig').value = m.triggerCh || 0;
+    document.getElementById('mac-threshold').value = m.threshold || 128;
+    document.getElementById('mac-intensity').value = m.intensity || 255;
+    document.getElementById('mac-speed').value = m.speed || 100;
+    document.getElementById('mac-fade').value = m.fade || 0;
+    document.getElementById('mac-duration').value = m.duration || 3000;
+    document.getElementById('mac-r').value = m.r || 255;
+    document.getElementById('mac-g').value = m.g || 255;
+    document.getElementById('mac-b').value = m.b || 255;
+    document.getElementById('mac-r-val').textContent = m.r || 255;
+    document.getElementById('mac-g-val').textContent = m.g || 255;
+    document.getElementById('mac-b-val').textContent = m.b || 255;
+    document.getElementById('mac-palette').value = m.palette || 0;
+
+    // Blind
+    document.getElementById('blind-r').value = m.blindR ?? 255; document.getElementById('blind-r-val').textContent = m.blindR ?? 255;
+    document.getElementById('blind-g').value = m.blindG ?? 255; document.getElementById('blind-g-val').textContent = m.blindG ?? 255;
+    document.getElementById('blind-b').value = m.blindB ?? 255; document.getElementById('blind-b-val').textContent = m.blindB ?? 255;
+    document.getElementById('blind-w').value = m.blindW ?? 0; document.getElementById('blind-w-val').textContent = m.blindW ?? 0;
+    document.getElementById('blind-ww').value = m.blindWW ?? 0; document.getElementById('blind-ww-val').textContent = m.blindWW ?? 0;
+    document.getElementById('blind-cw').value = m.blindCW ?? 0; document.getElementById('blind-cw-val').textContent = m.blindCW ?? 0;
+    document.getElementById('blind-amber').value = m.blindAmber ?? 0; document.getElementById('blind-amber-val').textContent = m.blindAmber ?? 0;
+    document.getElementById('blind-uv').value = m.blindUV ?? 0; document.getElementById('blind-uv-val').textContent = m.blindUV ?? 0;
+
+    setChannelMask(m.chMask || 1023);
+    renderPalette(m.palette || 0);
+    updateColorPreview();
+    macroTypeChanged();
+}
+
+function editMacro(id) {
+    showMacroModal(id);
+}
+
 async function saveMacro() {
     const payload = {
-        name: document.getElementById('mac-name').value, type: parseInt(document.getElementById('mac-type').value),
-        group: parseInt(document.getElementById('mac-group').value), triggerCh: parseInt(document.getElementById('mac-trig').value),
-        speed: parseInt(document.getElementById('mac-speed').value)
+        id: parseInt(document.getElementById('mac-id').value) || 0,
+        name: document.getElementById('mac-name').value,
+        type: parseInt(document.getElementById('mac-type').value),
+        group: parseInt(document.getElementById('mac-group').value),
+        triggerCh: parseInt(document.getElementById('mac-trig').value),
+        threshold: parseInt(document.getElementById('mac-threshold').value),
+        intensity: parseInt(document.getElementById('mac-intensity').value),
+        speed: parseInt(document.getElementById('mac-speed').value),
+        fade: parseInt(document.getElementById('mac-fade').value),
+        chMask: getChannelMask(),
+        palette: parseInt(document.getElementById('mac-palette').value),
+        r: parseInt(document.getElementById('mac-r').value),
+        g: parseInt(document.getElementById('mac-g').value),
+        b: parseInt(document.getElementById('mac-b').value),
+        blindR: parseInt(document.getElementById('blind-r').value),
+        blindG: parseInt(document.getElementById('blind-g').value),
+        blindB: parseInt(document.getElementById('blind-b').value),
+        blindW: parseInt(document.getElementById('blind-w').value),
+        blindWW: parseInt(document.getElementById('blind-ww').value),
+        blindCW: parseInt(document.getElementById('blind-cw').value),
+        blindAmber: parseInt(document.getElementById('blind-amber').value),
+        blindUV: parseInt(document.getElementById('blind-uv').value),
+        duration: parseInt(document.getElementById('mac-duration').value)
     };
-    await fetch('/api/macros', {method:'POST', body: JSON.stringify(payload)});
+    await fetch('/api/macros', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
     document.getElementById('macro-modal').style.display = 'none';
     fetchMacros();
+    toast('Macro saved', 'success');
 }
-async function triggerMacro(id) { await fetch('/api/macros/trigger?id='+id, {method:'POST'}); }
-async function stopMacro(id) { await fetch('/api/macros/stop?id='+id, {method:'POST'}); }
-async function delMacro(id) { await fetch('/api/macros?id='+id, {method:'DELETE'}); fetchMacros(); }
 
+async function triggerMacro(id) { await fetch('/api/macros/trigger?id='+id, {method:'POST'}); toast('Triggered', 'info'); }
+async function stopMacro(id) { await fetch('/api/macros/stop?id='+id, {method:'POST'}); }
+async function delMacro(id) {
+    if (!confirm('Delete macro ' + id + '?')) return;
+    await fetch('/api/macros?id='+id, {method:'DELETE'}); fetchMacros();
+}
+
+
+// ============================================================================
+// OSC CONTROL
+// ============================================================================
+
+// Load OSC config into settings panel
+async function loadOscConfig() {
+    try {
+        const r = await fetch('/api/osc');
+        const d = await r.json();
+        document.getElementById('cfg-osc-en').value = d.enabled ? '1' : '0';
+        document.getElementById('cfg-osc-port').value = d.port || 8000;
+        document.getElementById('osc-fb-en').value = d.feedbackEnabled ? '1' : '0';
+        document.getElementById('osc-fb-port').value = d.feedbackPort || 9000;
+        updateOscBadge(d.enabled);
+    } catch(e) {}
+}
+
+// Save OSC config
+async function saveOscConfig() {
+    const payload = {
+        enabled: document.getElementById('cfg-osc-en').value === '1',
+        port: parseInt(document.getElementById('cfg-osc-port').value) || 8000,
+        feedbackEnabled: document.getElementById('osc-fb-en').value === '1',
+        feedbackPort: parseInt(document.getElementById('osc-fb-port').value) || 9000
+    };
+    await fetch('/api/osc', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+    toast('OSC settings saved', 'success');
+    updateOscBadge(payload.enabled);
+    // Update displayed ports
+    document.getElementById('osc-send-port').textContent = payload.port;
+    document.getElementById('osc-recv-port').textContent = payload.feedbackPort;
+}
+
+function updateOscBadge(en) {
+    const badge = document.getElementById('osc-status-badge');
+    if (badge) { badge.textContent = en ? 'ON' : 'OFF'; badge.style.background = en ? 'var(--green)' : 'var(--red)'; }
+}
+
+// OSC activity log
+let oscLogEntries = [];
+function addOscLog(msg) {
+    const now = new Date().toLocaleTimeString();
+    oscLogEntries.unshift(now + ' ' + msg);
+    if (oscLogEntries.length > 50) oscLogEntries.pop();
+    const el = document.getElementById('osc-activity-log');
+    if (el) el.innerHTML = oscLogEntries.join('<br>');
+}
+
+// Extend the status polling to include OSC
+const _origSetInterval = setInterval;
+// Patch the existing status interval by adding OSC handling after it
+setInterval(async () => {
+    try {
+        const res = await fetch('/api/status');
+        const d = await res.json();
+        if (d.osc) {
+            const oscOn = d.osc.enabled;
+            document.getElementById('dot-osc').className = 'status-dot ' + (oscOn ? 'active' : 'inactive');
+            document.getElementById('val-osc').textContent = oscOn ? 'Active' : 'Off';
+            document.getElementById('val-osc-pkts').textContent = (d.osc.packetCount || 0) + ' pkts recv';
+            updateOscBadge(oscOn);
+            // Show last packet time if recent
+            if (d.osc.lastPacketTime && (Date.now()/1000 - d.osc.lastPacketTime) < 5) {
+                addOscLog('packet received');
+            }
+        }
+        // Update TouchOSC setup info
+        if (d.wifi && d.wifi.ip) {
+            const ipEl = document.getElementById('osc-host-ip');
+            if (ipEl) ipEl.textContent = d.wifi.ip;
+        }
+    } catch(e) {}
+}, 2000);
+
+// Load OSC config when tab is shown
+const _origNavHandler = true; // marker
+document.querySelectorAll('.nav-btn').forEach(btn => {
+    if (btn.dataset.page === 'osc') {
+        btn.addEventListener('click', () => {
+            loadOscConfig();
+        });
+    }
+});
+
+// Also load on page load for the send port display
+(async () => {
+    try {
+        const r = await fetch('/api/osc');
+        const d = await r.json();
+        const sp = document.getElementById('osc-send-port');
+        if (sp) sp.textContent = d.port || 8000;
+        const rp = document.getElementById('osc-recv-port');
+        if (rp) rp.textContent = d.feedbackPort || 9000;
+    } catch(e) {}
+})();
 </script>
 </body>
 </html>

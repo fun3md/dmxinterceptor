@@ -138,6 +138,27 @@ void FixtureManager::startLearn() {
     _learnChannel = 1;
     _probeStep = 0;
     memset(&_learnFixture, 0, sizeof(FixtureProfile));
+    // Initialize all channel offsets to "not available" (255)
+    _learnFixture.dimmerOffset = 255;
+    _learnFixture.redOffset    = 255;
+    _learnFixture.greenOffset  = 255;
+    _learnFixture.blueOffset   = 255;
+    _learnFixture.whiteOffset  = 255;
+    _learnFixture.warmWhiteOffset = 255;
+    _learnFixture.coolWhiteOffset = 255;
+    _learnFixture.amberOffset  = 255;
+    _learnFixture.uvOffset     = 255;
+    _learnFixture.strobeOffset = 255;
+    _learnFixture.panOffset    = 255;
+    _learnFixture.tiltOffset   = 255;
+    _learnFixture.focusOffset  = 255;
+    _learnFixture.prismOffset  = 255;
+    _learnFixture.effectOffset = 255;
+    _learnFixture.goboOffset   = 255;
+    _learnFixture.speedOffset  = 255;
+    _learnFixture.smokeOffset  = 255;
+    _learnFixture.fanOffset    = 255;
+    _learnFixture.channelCount = 1;
     Serial.println("[FIX] Learn mode started - blackout");
 }
 
@@ -182,6 +203,25 @@ void FixtureManager::learnFoundStart() {
 
     // User saw light on the previous channel (learnChannel was already incremented)
     _learnFixture.startChannel = _learnChannel - 1;
+    _learnFixture.dimmerOffset = 255;
+    _learnFixture.redOffset    = 255;
+    _learnFixture.greenOffset  = 255;
+    _learnFixture.blueOffset   = 255;
+    _learnFixture.whiteOffset  = 255;
+    _learnFixture.warmWhiteOffset = 255;
+    _learnFixture.coolWhiteOffset = 255;
+    _learnFixture.amberOffset  = 255;
+    _learnFixture.uvOffset     = 255;
+    _learnFixture.strobeOffset = 255;
+    _learnFixture.panOffset    = 255;
+    _learnFixture.tiltOffset   = 255;
+    _learnFixture.focusOffset  = 255;
+    _learnFixture.prismOffset  = 255;
+    _learnFixture.effectOffset = 255;
+    _learnFixture.goboOffset   = 255;
+    _learnFixture.speedOffset  = 255;
+    _learnFixture.smokeOffset  = 255;
+    _learnFixture.fanOffset    = 255;
     _learnState = LEARN_PROBING_DIMMER;
     _probeStep = 0;
 
@@ -245,7 +285,20 @@ void FixtureManager::toJson(JsonDocument& doc) const {
         f["green"]  = _fixtures[i].greenOffset;
         f["blue"]   = _fixtures[i].blueOffset;
         f["white"]  = _fixtures[i].whiteOffset;
+        f["warmWhite"] = _fixtures[i].warmWhiteOffset;
+        f["coolWhite"] = _fixtures[i].coolWhiteOffset;
+        f["amber"]  = _fixtures[i].amberOffset;
+        f["uv"]     = _fixtures[i].uvOffset;
         f["strobe"] = _fixtures[i].strobeOffset;
+        f["pan"]    = _fixtures[i].panOffset;
+        f["tilt"]   = _fixtures[i].tiltOffset;
+        f["focus"]  = _fixtures[i].focusOffset;
+        f["prism"]  = _fixtures[i].prismOffset;
+        f["effect"] = _fixtures[i].effectOffset;
+        f["gobo"]   = _fixtures[i].goboOffset;
+        f["speed"]  = _fixtures[i].speedOffset;
+        f["smoke"]  = _fixtures[i].smokeOffset;
+        f["fan"]    = _fixtures[i].fanOffset;
         f["group"]  = _fixtures[i].groupId;
     }
 
@@ -274,12 +327,25 @@ void FixtureManager::fromJson(const JsonDocument& doc) {
         strlcpy(_fixtures[idx].name, f["name"] | "Fixture", MAX_FIXTURE_NAME);
         _fixtures[idx].startChannel = f["start"] | 1;
         _fixtures[idx].channelCount = f["count"] | 1;
-        _fixtures[idx].dimmerOffset = f["dimmer"] | 0;
+        _fixtures[idx].dimmerOffset = f["dimmer"] | 255;
         _fixtures[idx].redOffset    = f["red"] | 255;
         _fixtures[idx].greenOffset  = f["green"] | 255;
         _fixtures[idx].blueOffset   = f["blue"] | 255;
         _fixtures[idx].whiteOffset  = f["white"] | 255;
+        _fixtures[idx].warmWhiteOffset = f["warmWhite"] | 255;
+        _fixtures[idx].coolWhiteOffset = f["coolWhite"] | 255;
+        _fixtures[idx].amberOffset  = f["amber"] | 255;
+        _fixtures[idx].uvOffset     = f["uv"] | 255;
         _fixtures[idx].strobeOffset = f["strobe"] | 255;
+        _fixtures[idx].panOffset    = f["pan"] | 255;
+        _fixtures[idx].tiltOffset   = f["tilt"] | 255;
+        _fixtures[idx].focusOffset  = f["focus"] | 255;
+        _fixtures[idx].prismOffset  = f["prism"] | 255;
+        _fixtures[idx].effectOffset = f["effect"] | 255;
+        _fixtures[idx].goboOffset   = f["gobo"] | 255;
+        _fixtures[idx].speedOffset  = f["speed"] | 255;
+        _fixtures[idx].smokeOffset  = f["smoke"] | 255;
+        _fixtures[idx].fanOffset    = f["fan"] | 255;
         _fixtures[idx].groupId      = f["group"] | 0;
         idx++;
     }
