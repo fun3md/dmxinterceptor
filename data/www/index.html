@@ -310,6 +310,19 @@
             </div>
             <button class="btn btn-primary" onclick="saveArtnet()">Save ArtNet</button>
         </div>
+        <div class="card" style="max-width:500px; margin-top:20px;">
+            <h3>Firmware Update (OTA)</h3>
+            <p style="color:var(--text-secondary); font-size:13px; margin:8px 0 16px;">
+                Version: <span id="fw-version">?</span>. Upload <code>firmware.bin</code> or <code>littlefs.bin</code>; the device reboots afterwards.
+                Network upload from PlatformIO: <code>pio run -e &lt;env&gt;-ota -t upload</code>.
+            </p>
+            <div class="form-group"><label>Type</label>
+                <select id="ota-type"><option value="firmware">Firmware (.bin)</option><option value="filesystem">Web UI / Filesystem (.bin)</option></select>
+            </div>
+            <div class="form-group"><input type="file" id="ota-file" accept=".bin"></div>
+            <progress id="ota-progress" value="0" max="100" style="width:100%; display:none"></progress>
+            <button class="btn btn-primary" onclick="uploadOTA()">Upload & Flash</button>
+        </div>
     </div>
 </div>
 
@@ -563,6 +576,7 @@ setInterval(async () => {
     try {
         const res = await fetch('/api/status');
         const d = await res.json();
+        const fv = document.getElementById('fw-version'); if (fv && d.version) fv.textContent = d.version;
         document.getElementById('val-rx').textContent = d.dmx.rxFps + ' fps';
         document.getElementById('val-tx').textContent = d.dmx.txFps + ' fps';
         document.getElementById('val-sacn').textContent = d.sacn.active ? 'Active' : 'Idle';
@@ -700,6 +714,22 @@ async function scanNetworks() {
     } catch(e) {
         list.innerHTML = '<p style="color:var(--red); font-size:13px;">Scan failed.</p>';
     }
+}
+
+function uploadOTA() {
+    const f = document.getElementById('ota-file').files[0];
+    if (!f) { toast('Choose a .bin file first', 'error'); return; }
+    if (!confirm('Flash ' + f.name + ' and reboot the device? DMX output will be interrupted.')) return;
+    const fd = new FormData(); fd.append('file', f, f.name);
+    const bar = document.getElementById('ota-progress'); bar.style.display = 'block';
+    const x = new XMLHttpRequest();
+    x.open('POST', '/api/ota/' + document.getElementById('ota-type').value);
+    x.upload.onprogress = e => { if (e.lengthComputable) bar.value = e.loaded / e.total * 100; };
+    x.onload = () => x.status === 200
+        ? toast('Update OK, device rebooting...', 'info')
+        : toast('Update failed: ' + x.responseText, 'error');
+    x.onerror = () => toast('Upload error (device may be rebooting)', 'error');
+    x.send(fd);
 }
 
 async function saveWiFi(restart) {

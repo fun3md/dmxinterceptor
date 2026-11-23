@@ -108,3 +108,8 @@
 #define OSC_DEFAULT_FEEDBACK_PORT 9000     // Standard TouchOSC feedback port
 #define OSC_DEFAULT_ENABLED true           // OSC enabled by default
 #define OSC_DEFAULT_FEEDBACK_ENABLED false // TouchOSC feedback off by default
+
+// --- OTA ---
+#define FIRMWARE_VERSION "0.7.0"
+#define OTA_PORT 3232                  // ArduinoOTA (espota / PlatformIO) port
+#define OTA_PASSWORD "dmx12345"        // Change for production; used by ArduinoOTA only

@@ -29,6 +29,7 @@
 // ============================================================================
 
 #include <Arduino.h>
+#include <ArduinoOTA.h>
 #include "config.h"
 #include "config_manager.h"
 #include "wifi_manager.h"
@@ -130,6 +131,7 @@ void appTaskFunc(void* parameter) {
     for (;;) {
         // --- WiFi ---
         wifiManager.loop();
+        ArduinoOTA.handle();
 
         // --- sACN ---
         sacnReceiver.loop();
@@ -260,6 +262,15 @@ void setup() {
     //    API handlers run on Core 0 and call into dmxEngine via the
     //    copyInputBuffer / copyOutputBuffer helpers for safe cross-core access.
     webServer.begin();
+
+    // 8b. ArduinoOTA (network upload from PlatformIO / Arduino IDE)
+    ArduinoOTA.setHostname(WIFI_HOSTNAME);
+    ArduinoOTA.setPort(OTA_PORT);
+    ArduinoOTA.setPassword(OTA_PASSWORD);
+    ArduinoOTA.onStart([]() { Serial.println("[OTA] Start"); });
+    ArduinoOTA.onEnd([]() { Serial.println("\n[OTA] Done"); });
+    ArduinoOTA.onError([](ota_error_t e) { Serial.printf("[OTA] Error %u\n", e); });
+    ArduinoOTA.begin();
 
     Serial.printf("[MAIN] Web UI: http://%s/\n\n", wifiManager.getIP().c_str());
 

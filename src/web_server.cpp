@@ -9,6 +9,7 @@
 #include "osc_receiver.h"
 #include <ArduinoJson.h>
 #include <LittleFS.h>
+#include <Update.h>
 
 WebServer webServer;
 
@@ -32,6 +33,7 @@ void WebServer::setupAPIRoutes() {
         JsonDocument doc;
         doc["uptime"]    = millis() / 1000;
         doc["freeHeap"]  = ESP.getFreeHeap();
+        doc["version"]   = FIRMWARE_VERSION;
         doc["wifi"]["connected"] = wifiManager.isConnected();
         doc["wifi"]["apMode"]    = wifiManager.isAPMode();
         doc["wifi"]["ip"]        = wifiManager.getIP();
@@ -534,6 +536,44 @@ void WebServer::setupAPIRoutes() {
         }
         req->send(200, "application/json", "{\"status\":\"ok\"}");
     });
+
+    // --- OTA (HTTP upload) ---
+    // POST multipart file to /api/ota/firmware (app .bin) or
+    // /api/ota/filesystem (littlefs.bin).  Device reboots on success.
+    auto otaDone = [](AsyncWebServerRequest* req) {
+        bool ok = !Update.hasError();
+        AsyncWebServerResponse* res = req->beginResponse(
+            ok ? 200 : 500, "application/json",
+            ok ? "{\"status\":\"ok\",\"rebooting\":true}"
+               : String("{\"error\":\"") + Update.errorString() + "\"}");
+        res->addHeader("Connection", "close");
+        req->send(res);
+        if (ok) {
+            Serial.println("[OTA] Update complete, rebooting...");
+            delay(500);
+            ESP.restart();
+        }
+    };
+    auto otaUpload = [](int cmd) {
+        return [cmd](AsyncWebServerRequest* req, String filename, size_t index,
+                     uint8_t* data, size_t len, bool final) {
+            if (index == 0) {
+                Serial.printf("[OTA] HTTP update start: %s (%s)\n", filename.c_str(),
+                              cmd == U_FLASH ? "firmware" : "filesystem");
+                size_t size = (cmd == U_FLASH) ? UPDATE_SIZE_UNKNOWN
+                                               : LittleFS.totalBytes();
+                if (cmd != U_FLASH) LittleFS.end();  // release FS before overwrite
+                if (!Update.begin(size, cmd)) Update.printError(Serial);
+            }
+            if (!Update.hasError() && Update.write(data, len) != len)
+                Update.printError(Serial);
+            if (final) {
+                if (!Update.end(true)) Update.printError(Serial);
+            }
+        };
+    };
+    _server.on("/api/ota/firmware", HTTP_POST, otaDone, otaUpload(U_FLASH));
+    _server.on("/api/ota/filesystem", HTTP_POST, otaDone, otaUpload(U_SPIFFS));
 
     // --- RESTART ---
     _server.on("/api/restart", HTTP_POST, [](AsyncWebServerRequest* req) {
